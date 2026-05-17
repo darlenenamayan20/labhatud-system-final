@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LabHatud | Login &amp; Register</title>
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        /* ── Django messages rendered as visible styled cards in right panel ── */
+        .modern-alert {
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            position: relative;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .modern-alert.alert-error {
+            background: rgba(255, 90, 90, 0.1);
+            border: 1px solid rgba(255, 90, 90, 0.3);
+            color: #ffaaaa;
+        }
+
+        .modern-alert.alert-success {
+            background: rgba(0, 194, 168, 0.1);
+            border: 1px solid rgba(0, 194, 168, 0.3);
+            color: #00C2A8;
+        }
+
+        .modern-alert.alert-warning {
+            background: rgba(232, 200, 74, 0.1);
+            border: 1px solid rgba(232, 200, 74, 0.3);
+            color: #E8C84A;
+        }
+
+        .modern-alert.alert-info {
+            background: rgba(74, 158, 255, 0.1);
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            color: #7bb4ff;
+        }
+
+        .alert-icon-inline {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .alert-body { flex: 1; color: rgba(255,255,255,0.85); }
+
+        .alert-label {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.4px;
+            margin-bottom: 3px;
+        }
+
+        .alert-error   .alert-label { color: #ff8888; }
+        .alert-success .alert-label { color: #00C2A8; }
+        .alert-warning .alert-label { color: #E8C84A; }
+        .alert-info    .alert-label { color: #7bb4ff; }
+
+        .alert-body-text {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.75);
+        }
+
+        .alert-dismiss {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.3);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            flex-shrink: 0;
+            transition: color 0.2s;
+        }
+
+        .alert-dismiss:hover { color: rgba(255,255,255,0.7); }
+
+        /* Pending Approval Message - Premium Alert Card */
+        .pending-approval-card {
+            background: linear-gradient(135deg, rgba(255, 90, 90, 0.08), rgba(255, 90, 90, 0.03));
+            border: 1px solid rgba(255, 90, 90, 0.25);
+            border-radius: 20px;
+            padding: 18px 22px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            backdrop-filter: blur(8px);
+            position: relative;
+            overflow: hidden;
+            animation: slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .pending-approval-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background: linear-gradient(180deg, #ff5a5a, #ff8a8a);
+        }
+
+        .pending-approval-card::after {
+            content: '';
+            position: absolute;
+            top: -50%; right: -50%;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(255, 90, 90, 0.1), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        .pending-icon {
+            width: 48px; height: 48px;
+            background: linear-gradient(135deg, rgba(255, 90, 90, 0.2), rgba(255, 90, 90, 0.05));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 90, 90, 0.3);
+        }
+
+        .pending-content { flex: 1; }
+
+        .pending-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #ff8888;
+            margin-bottom: 6px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .pending-title span {
+            display: inline-block;
+            width: 6px; height: 6px;
+            background: #ff5a5a;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .pending-text {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.5;
+        }
+
+        .pending-text strong { color: #ff8888; font-weight: 700; }
+
+        .pending-hint {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.45);
+            margin-top: 8px;
+            display: flex; align-items: center; gap: 12px;
+        }
+
+        .pending-hint i { font-style: normal; display: inline-flex; align-items: center; gap: 4px; }
+
+        /* Logged-in Warning Card */
+        .logged-in-warning {
+            background: linear-gradient(135deg, rgba(232, 200, 74, 0.08), rgba(232, 200, 74, 0.02));
+            border: 1px solid rgba(232, 200, 74, 0.3);
+            border-radius: 20px;
+            padding: 18px 22px;
+            margin-bottom: 24px;
+            display: flex; align-items: center; gap: 16px;
+            backdrop-filter: blur(8px);
+            position: relative;
+        }
+
+        .logged-in-warning::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background: linear-gradient(180deg, var(--gold), #ffd966);
+            border-radius: 20px 0 0 20px;
+        }
+
+        .warning-icon {
+            width: 48px; height: 48px;
+            background: rgba(232, 200, 74, 0.15);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+        }
+
+        .warning-content { flex: 1; }
+
+        .warning-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700; font-size: 0.9rem;
+            color: var(--gold); margin-bottom: 4px;
+        }
+
+        .warning-text { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); }
+
+        .warning-link {
+            color: var(--gold); font-weight: 700; text-decoration: none;
+            font-size: 0.85rem; display: inline-flex; align-items: center;
+            gap: 6px; margin-top: 8px; transition: gap 0.2s ease;
+        }
+
+        .warning-link:hover { gap: 10px; color: #ffd966; }
+
+        /* Form field error styling */
+        .input-group.error input,
+        .input-group.error select {
+            border-color: #ff5a5a;
+            box-shadow: 0 0 0 3px rgba(255, 90, 90, 0.1);
+        }
+
+        .field-error {
+            font-size: 0.7rem; color: #ff8888;
+            margin-top: 6px; display: flex; align-items: center; gap: 6px;
+        }
+
+        .field-error::before { content: '⚠️'; font-size: 0.65rem; }
+
+        /* Toast animation */
+        .toast { animation: toastSlideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+
+        @keyframes toastSlideInRight {
+            from { opacity: 0; transform: translateX(60px) scale(0.9); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+
+        /* Shake animation for form errors */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25%       { transform: translateX(-5px); }
+            75%       { transform: translateX(5px); }
+        }
+
+        .shake { animation: shake 0.3s ease-in-out; }
+    </style>
+</head>
+<body style="background: var(--surface); height: 100%;">
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- ── LOADING ── -->
+    <div id="loadingScreen">
+        <div class="loading-brand">LABHATUD</div>
+        <div class="loading-sub">Laundry Ecosystem</div>
+        <div class="loading-bar-wrap">
+            <div class="loading-bar-fill" id="loadingBar"></div>
+        </div>
+        <div class="loading-pct" id="loadingPct">0%</div>
+    </div>
+
+    <!-- ── NAV ── -->
+    <nav class="nav-auth">
+        <a href="{% url 'index' %}" class="nav-logo">
+            <div class="nav-logo-badge">LH</div>
+            <span class="nav-logo-name">LABHATUD</span>
+        </a>
+        <a href="{% url 'index' %}" class="nav-back">← Back to Home</a>
+    </nav>
+
+    <!-- ── LAYOUT ── -->
+    <div class="page-wrap">
+
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+            <div class="left-bg-dots"></div>
+            <div class="left-blob lb1"></div>
+            <div class="left-blob lb2"></div>
+
+            <div class="left-content">
+                <div class="left-tag">🧺 LabHatud Ecosystem</div>
+
+                <h2 class="left-title">
+                    Smart Laundry<br>
+                    <span>Starts Here</span>
+                </h2>
+
+                <p class="left-desc">
+                    Join thousands in Cantilan who've made laundry day a thing of the past. Book, track, and receive — all from your device.
+                </p>
+
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-check">✓</div>
+                        Real-time order tracking &amp; updates
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-check">✓</div>
+                        2-hour express service available
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-check">✓</div>
+                        Eco-friendly, skin-safe detergents
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-check">✓</div>
+                        Secure in-app payment &amp; receipts
+                    </div>
+                </div>
+
+                <div class="left-review-box">
+                    <div class="lrb-stars">★★★★★</div>
+                    <p class="lrb-text">"LabHatud completely changed how I do laundry. It's faster, easier, and the tracking is incredible."</p>
+                    <div class="lrb-author">— Maria A., Customer · Cantilan</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel" id="rightPanel">
+
+            <!-- Messages Container -->
+            <div id="messages-container">
+
+                <!-- PENDING ADMIN APPROVAL (shown as card inside right panel) -->
+                {% if pending_approval %}
+                <div class="pending-approval-card" id="pendingApprovalMessage">
+                    <div class="pending-icon">⏳</div>
+                    <div class="pending-content">
+                        <div class="pending-title">
+                            ADMIN APPROVAL REQUIRED
+                            <span></span>
+                        </div>
+                        <div class="pending-text">
+                            <strong>Your account is pending admin approval.</strong> Our team is reviewing your application.
+                        </div>
+                        <div class="pending-hint">
+                            <i>📧 You'll receive an email once your account is verified</i>
+                            <i>⏱️ Usually within 24 hours</i>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="modern-alert alert-{{ message.tags }}">
+                            <span class="alert-icon-inline">
+                                {% if message.tags == 'success' %}✅
+                                {% elif message.tags == 'error' %}❌
+                                {% elif message.tags == 'warning' %}⚠️
+                                {% else %}ℹ️
+                                {% endif %}
+                            </span>
+                            <div class="alert-body">
+                                <div class="alert-label">
+                                    {% if message.tags == 'success' %}Success
+                                    {% elif message.tags == 'error' %}Error
+                                    {% elif message.tags == 'warning' %}Heads up
+                                    {% else %}Notice
+                                    {% endif %}
+                                </div>
+                                <div class="alert-body-text">{{ message }}</div>
+                            </div>
+                            <button class="alert-dismiss" onclick="this.closest('.modern-alert').remove()" aria-label="Dismiss">✕</button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Already logged-in warning (card inside right panel) -->
+                {% if already_logged_in %}
+                <div class="logged-in-warning">
+                    <div class="warning-icon">⚠️</div>
+                    <div class="warning-content">
+                        <div class="warning-title">Already logged in</div>
+                        <div class="warning-text">
+                            You're currently logged in as <strong>{{ current_user.username }}</strong> ({{ current_user.role }})
+                        </div>
+                        <a href="{% url 'logout' %}" class="warning-link">Logout here →</a>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div><!-- /#messages-container -->
+
+            <!-- Tabs -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Log In</button>
+                <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">Create Account</button>
+            </div>
+
+            <!-- ── LOGIN ── -->
+            <div class="form-panel active" id="panelLogin">
+                <h2 class="form-heading">Welcome back 👋</h2>
+                <p class="form-sub">Sign in to your LabHatud account.</p>
+
+                <form method="POST" action="{% url 'login' %}" id="loginForm">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <label>Username or Email</label>
+                        <input type="text" name="username" placeholder="username or email@example.com" required autocomplete="username">
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" name="password" id="loginPw" placeholder="••••••••" required autocomplete="current-password">
+                            <span class="toggle-pw" onclick="togglePw('loginPw', this)">👁</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">Log In →</button>
+                </form>
+
+                <div class="divider"><span>or</span></div>
+                <p class="switch-prompt">Don't have an account? <a href="#" onclick="switchTab('register'); return false;">Create one free</a></p>
+            </div>
+
+            <!-- ── REGISTER ── -->
+            <div class="form-panel" id="panelRegister">
+                <h2 class="form-heading">Create account</h2>
+                <p class="form-sub">Join the LabHatud ecosystem today.</p>
+
+                <form method="POST" action="{% url 'register' %}" id="registerForm">
+                    {% csrf_token %}
+
+                    <div class="input-group">
+                        <label>Username *</label>
+                        <input type="text" name="reg_username" placeholder="cooluser123" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label>First Name *</label>
+                            <input type="text" name="reg_firstname" placeholder="Juan" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Last Name *</label>
+                            <input type="text" name="reg_lastname" placeholder="Dela Cruz" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Email Address *</label>
+                        <input type="email" name="reg_email" placeholder="hello@email.com" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label>Password *</label>
+                            <div class="password-wrapper">
+                                <input type="password" name="reg_password" id="regPw" placeholder="Min. 8 characters" required>
+                                <span class="toggle-pw" onclick="togglePw('regPw', this)">👁</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Confirm Password *</label>
+                            <div class="password-wrapper">
+                                <input type="password" name="reg_confirm" id="regPwConfirm" placeholder="Repeat password" required>
+                                <span class="toggle-pw" onclick="togglePw('regPwConfirm', this)">👁</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Address *</label>
+                        <input type="text" name="reg_address" placeholder="Street, Barangay, Davao City" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label>Birthdate *</label>
+                            <input type="date" name="reg_birthdate" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Gender *</label>
+                            <select name="reg_gender" required>
+                                <option value="" disabled selected>Select</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                                <option value="prefer_not">Prefer not to say</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Phone Number *</label>
+                        <input type="tel" name="reg_phone" placeholder="+63 912 345 6789" required>
+                    </div>
+
+                    <!-- ROLE SELECTOR -->
+                    <div class="input-group">
+                        <label>I am a *</label>
+                        <div class="role-selector">
+                            <label class="role-option" id="ro-customer">
+                                <input type="radio" name="reg_role" value="user" required checked>
+                                <span class="role-emoji">🧺</span>
+                                <div class="role-info">
+                                    <strong>Customer</strong>
+                                    <small>Book laundry pickup &amp; delivery</small>
+                                </div>
+                                <div class="role-radio-dot"></div>
+                            </label>
+                            <label class="role-option" id="ro-rider">
+                                <input type="radio" name="reg_role" value="rider">
+                                <span class="role-emoji">🛵</span>
+                                <div class="role-info">
+                                    <strong>Rider</strong>
+                                    <small>Delivery partner — earn flexibly</small>
+                                </div>
+                                <div class="role-radio-dot"></div>
+                            </label>
+                            <label class="role-option" id="ro-owner">
+                                <input type="radio" name="reg_role" value="owner">
+                                <span class="role-emoji">🏪</span>
+                                <div class="role-info">
+                                    <strong>Laundry Owner</strong>
+                                    <small>List &amp; manage your shop</small>
+                                </div>
+                                <div class="role-radio-dot"></div>
+                            </label>
+                            <!-- ADMIN ROLE — hidden until admin key is entered -->
+                            <label class="role-option role-admin-hidden" id="ro-admin" style="display:none;">
+                                <input type="radio" name="reg_role" value="admin">
+                                <span class="role-emoji">🛡️</span>
+                                <div class="role-info">
+                                    <strong>System Admin</strong>
+                                    <small>Platform management &amp; control</small>
+                                </div>
+                                <div class="role-radio-dot"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- ADMIN KEY FIELD -->
+                    <div class="input-group" id="adminKeyGroup" style="display:none;">
+                        <label>Admin Access Key *</label>
+                        <div class="password-wrapper">
+                            <input type="password" name="reg_admin_key" id="adminKeyInput" placeholder="Enter the system admin key">
+                            <span class="toggle-pw" onclick="togglePw('adminKeyInput', this)">👁</span>
+                        </div>
+                        <small style="color:var(--text3);font-size:11px;margin-top:4px;">
+                            This key is provided by the LabHatud system operator.
+                        </small>
+                    </div>
+
+                    <!-- ADMIN UNLOCK LINK -->
+                    <div style="text-align:right;margin-top:-8px;margin-bottom:14px;">
+                        <a href="#" onclick="showAdminUnlock();return false;" style="font-size:11px;color:var(--text3);text-decoration:none;" id="adminUnlockLink">
+                            🔐 Register as admin?
+                        </a>
+                    </div>
+
+                    <!-- ADMIN UNLOCK PANEL -->
+                    <div id="adminUnlockPanel" style="display:none;background:rgba(26,107,90,0.06);border:1px solid rgba(26,107,90,0.2);border-radius:10px;padding:14px;margin-bottom:14px;">
+                        <div style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:8px;">🛡️ Admin Registration Unlock</div>
+                        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">Enter the system operator code to unlock the Admin role option.</div>
+                        <div style="display:flex;gap:8px;">
+                            <input type="password" id="unlockCodeInput" placeholder="Enter operator code"
+                                style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;font-family:'DM Sans',sans-serif;">
+                            <button type="button" onclick="verifyAdminCode()"
+                                style="padding:9px 16px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;">
+                                Unlock
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit" style="margin-top:1rem;">Create Account →</button>
+                </form>
+
+                <div class="divider"><span>or</span></div>
+                <p class="switch-prompt">Already have an account? <a href="#" onclick="switchTab('login'); return false;">Sign in</a></p>
+            </div>
+
+        </div><!-- /.right-panel -->
+    </div><!-- /.page-wrap -->
+
+    <script>
+        // ── TOAST NOTIFICATION (used for JS-triggered events only) ──
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const icons  = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            const titles = { success: 'Success', error: 'Error', warning: 'Attention', info: 'Notice' };
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[type] || '🔔'}</div>
+                <div class="toast-body">
+                    <div class="toast-title">${titles[type] || 'Notice'}</div>
+                    <div class="toast-msg">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+                <div class="toast-progress"></div>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 5000);
+        }
+
+        // ── LOADING ──
+        const bar    = document.getElementById('loadingBar');
+        const pct    = document.getElementById('loadingPct');
+        const screen = document.getElementById('loadingScreen');
+        let p = 0;
+        const iv = setInterval(() => {
+            p += Math.random() * 18 + 4;
+            if (p >= 100) {
+                p = 100;
+                clearInterval(iv);
+                setTimeout(() => screen.classList.add('hidden'), 400);
+            }
+            bar.style.width = p + '%';
+            pct.textContent = Math.round(p) + '%';
+        }, 180);
+
+        // ── TAB SWITCH ──
+        function switchTab(tab) {
+            const isLogin = tab === 'login';
+            document.getElementById('tabLogin').classList.toggle('active', isLogin);
+            document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+            document.getElementById('panelLogin').classList.toggle('active', isLogin);
+            document.getElementById('panelRegister').classList.toggle('active', !isLogin);
+            document.getElementById('rightPanel').scrollTop = 0;
+        }
+
+        // ── ROLE SELECTOR ──
+        document.querySelectorAll('.role-option input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                document.querySelectorAll('.role-option').forEach(o => o.classList.remove('selected'));
+                radio.closest('.role-option').classList.add('selected');
+                document.getElementById('adminKeyGroup').style.display =
+                    radio.value === 'admin' ? 'flex' : 'none';
+            });
+        });
+
+        const defaultChecked = document.querySelector('.role-option input[type="radio"]:checked');
+        if (defaultChecked) defaultChecked.closest('.role-option').classList.add('selected');
+
+        // ── ADMIN UNLOCK ──
+        const ADMIN_UNLOCK_CODE = 'LABHATUD-ADMIN-2025';
+
+        function showAdminUnlock() {
+            const panel = document.getElementById('adminUnlockPanel');
+            const link  = document.getElementById('adminUnlockLink');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                link.textContent = '✕ Cancel';
+            } else {
+                panel.style.display = 'none';
+                link.textContent = '🔐 Register as admin?';
+            }
+        }
+
+        function verifyAdminCode() {
+            const code = document.getElementById('unlockCodeInput').value.trim();
+            if (code === ADMIN_UNLOCK_CODE) {
+                document.getElementById('ro-admin').style.display = 'flex';
+                document.getElementById('adminUnlockPanel').style.display = 'none';
+                document.getElementById('adminUnlockLink').style.display = 'none';
+                const adminRadio = document.querySelector('input[value="admin"]');
+                adminRadio.checked = true;
+                adminRadio.closest('.role-option').classList.add('selected');
+                document.querySelectorAll('.role-option').forEach(o => {
+                    if (!o.querySelector('input').checked) o.classList.remove('selected');
+                });
+                document.getElementById('adminKeyGroup').style.display = 'flex';
+                showToast('Admin role unlocked! Fill in the Admin Access Key below.', 'success');
+            } else {
+                const input = document.getElementById('unlockCodeInput');
+                input.style.borderColor = '#ff5a5a';
+                input.classList.add('shake');
+                setTimeout(() => {
+                    input.style.borderColor = '';
+                    input.classList.remove('shake');
+                }, 300);
+                showToast('Incorrect operator code. Access denied.', 'error');
+            }
+        }
+
+        // ── PASSWORD TOGGLE ──
+        function togglePw(inputId, span) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') { input.type = 'text';     span.textContent = '🙈'; }
+            else                           { input.type = 'password'; span.textContent = '👁'; }
+        }
+
+        // ── FORM VALIDATION ──
+        const registerForm = document.getElementById('registerForm');
+        if (registerForm) {
+            registerForm.addEventListener('submit', function(e) {
+                const password = document.querySelector('input[name="reg_password"]').value;
+                const confirm  = document.querySelector('input[name="reg_confirm"]').value;
+                if (password !== confirm) {
+                    e.preventDefault();
+                    showToast('Passwords do not match!', 'error');
+                    return false;
+                }
+                if (password.length < 8) {
+                    e.preventDefault();
+                    showToast('Password must be at least 8 characters!', 'error');
+                    return false;
+                }
+            });
+        }
+
+        // ── Switch to register if URL param set ──
+        if (window.location.search.includes('register')) switchTab('register');
+    </script>
+</body>
+</html>

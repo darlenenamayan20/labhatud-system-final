@@ -1,0 +1,3869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LabHatud | Admin Dashboard</title>
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+    <!-- CSRF Token for AJAX requests -->
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <style>
+        /* ========== RATINGS & REVIEWS PANEL STYLES ========== */
+
+/* Review Card Styles */
+.review-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    border: 1.5px solid var(--border);
+    transition: all 0.2s ease;
+    margin-bottom: 16px;
+}
+
+.review-card:hover {
+    border-color: var(--teal);
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.reviewer-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.reviewer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--teal);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.reviewer-name {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 14px;
+}
+
+.reviewer-email {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+}
+
+.review-rating {
+    display: flex;
+    gap: 4px;
+    font-size: 18px;
+    align-items: center;
+}
+
+.review-shop-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--bg2);
+    font-size: 13px;
+    flex-wrap: wrap;
+}
+
+.review-shop-name {
+    font-weight: 600;
+    color: var(--teal);
+}
+
+.review-date {
+    font-size: 11px;
+    color: var(--text3);
+}
+
+.review-order-link {
+    font-size: 11px;
+    color: var(--text3);
+}
+
+.review-comment {
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.5;
+    margin-bottom: 12px;
+    padding: 8px 0;
+    background: var(--bg2);
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.review-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--bg2);
+}
+
+.btn-delete-review {
+    padding: 6px 12px;
+    background: rgba(224,82,82,0.1);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-delete-review:hover {
+    background: var(--danger);
+    color: white;
+}
+
+/* Shop Summary Card Styles */
+.shops-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.shop-summary-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.shop-summary-card:hover {
+    border-color: var(--teal);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.shop-summary-card.selected {
+    border-color: var(--teal);
+    background: rgba(26,107,90,0.05);
+}
+
+.shop-summary-name {
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.shop-summary-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.shop-summary-stars {
+    font-size: 14px;
+}
+
+.shop-summary-review-count {
+    font-size: 11px;
+    color: var(--text3);
+}
+
+/* Rating Distribution Bars */
+.rating-distribution {
+    margin-top: 8px;
+}
+
+.progress-bar {
+    background: var(--bg2);
+    border-radius: 10px;
+    height: 6px;
+    overflow: hidden;
+    flex: 1;
+}
+
+.progress-fill {
+    background: var(--teal);
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+/* Filter Bar Styles */
+.analytics-filters {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    border: 1.5px solid var(--border);
+    margin-bottom: 24px;
+}
+
+.filter-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+}
+
+.filter-group select {
+    padding: 8px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.filter-group select:focus {
+    border-color: var(--teal);
+    outline: none;
+}
+
+/* Reviews Grid */
+.reviews-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* KPI Cards for Reviews */
+.kpi-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    border: 1.5px solid var(--border);
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.kpi-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.kpi-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--teal);
+}
+
+.kpi-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 4px;
+}
+
+/* Star Colors */
+.star-filled {
+    color: #f5a623;
+}
+
+.star-empty {
+    color: var(--border);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .shops-summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .review-header {
+        flex-direction: column;
+    }
+    
+    .review-rating {
+        align-self: flex-start;
+    }
+    
+    .analytics-filters {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .filter-group select {
+        width: 100%;
+    }
+    
+    .search-box {
+        width: 100%;
+    }
+    
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .review-actions {
+        flex-direction: column;
+    }
+    
+    .btn-delete-review, .btn-view {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Animation for new reviews */
+@keyframes reviewFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.review-card {
+    animation: reviewFadeIn 0.3s ease forwards;
+}
+
+/* Loading State */
+.loading-reviews {
+    text-align: center;
+    padding: 60px;
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+}
+
+.loading-reviews .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--bg2);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 16px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Empty State */
+.empty-reviews {
+    text-align: center;
+    padding: 60px;
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1.5px dashed var(--border);
+}
+
+.empty-reviews-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-reviews h4 {
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: var(--text2);
+}
+
+.empty-reviews p {
+    font-size: 13px;
+    color: var(--text3);
+}
+
+/* Toolbar Styles */
+.toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 0 12px;
+    flex: 1;
+}
+
+.search-box span {
+    color: var(--text3);
+    font-size: 14px;
+}
+
+.search-box input {
+    border: none;
+    background: none;
+    padding: 10px 0;
+    font-size: 14px;
+    width: 100%;
+    outline: none;
+    color: var(--text);
+}
+
+.toolbar-select {
+    padding: 8px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+}
+    </style>
+</head>
+<body>
+
+<!-- TOAST NOTIFICATIONS -->
+<div id="toast-container"></div>
+
+<!-- ── NAVBAR ── -->
+<nav id="mainNav">
+    <a href="{% url 'admin_dashboard' %}" class="nav-logo">
+        <img src="{% static 'images/logo_no_background.png' %}" alt="LabHatud Logo" class="nav-logo-img">
+        <span class="nav-logo-name">LABHATUD</span>
+        <span class="nav-role-chip">ADMIN</span>
+    </a>
+
+    <ul class="nav-links">
+        <li><a href="#" class="active" onclick="switchPanel('dashboard',this)">Dashboard</a></li>
+        <li><a href="#" onclick="switchPanel('users',this)">Users</a></li>
+        <li><a href="#" onclick="switchPanel('orders',this)">Orders</a></li>
+        <li><a href="#" onclick="switchPanel('analytics',this)">Analytics</a></li>
+        <li><a href="#" onclick="switchPanel('reviews',this)">Reviews</a></li>
+        <li><a href="#" onclick="switchPanel('settings',this)">Settings</a></li>
+    </ul>
+
+    <div class="nav-cta">
+        <!-- Notification Bell -->
+        <div style="position:relative;">
+            <div class="notif-bell" id="notifBell">🔔
+                <div class="notif-badge" id="notifBadge"></div>
+            </div>
+            <div class="notif-panel" id="notifPanel">
+                <div class="notif-panel-header">
+                    <h4>Notifications</h4>
+                    <span class="notif-clear" id="notifClear">Clear all</span>
+                </div>
+                <div id="notifList">
+                    <div class="notif-empty">No new notifications</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Menu -->
+        <div class="user-menu">
+            <span class="user-name">{{ request.user.first_name|default:request.user.username }}</span>
+            <div class="user-avatar" id="userAvatar">
+                {% if request.user.first_name %}
+                    {{ request.user.first_name|first|upper }}
+                {% else %}
+                    {{ request.user.username|first|upper }}
+                {% endif %}
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+                <a href="#" onclick="switchPanel('settings');return false;">System Settings</a>
+                <a href="#" onclick="switchPanel('settings');return false;">Admin Profile</a>
+                <a href="{% url 'logout' %}" style="color:var(--danger);font-weight:700;">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+    <a href="#" onclick="switchPanel('dashboard')">Dashboard</a>
+    <a href="#" onclick="switchPanel('users')">Users</a>
+    <a href="#" onclick="switchPanel('orders')">Orders</a>
+    <a href="#" onclick="switchPanel('analytics')">Analytics</a>
+    <a href="#" onclick="switchPanel('reviews')">Reviews</a>
+    <a href="#" onclick="switchPanel('settings')">Settings</a>
+    <a href="{% url 'logout' %}" style="color:var(--teal);font-weight:700;">Logout</a>
+</div>
+
+<!-- ── PAGE WRAPPER ── -->
+<div class="page-wrapper">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">Overview</div>
+            <div class="sidebar-item active" onclick="switchPanel('dashboard',this)">
+                <span class="sidebar-icon">📊</span> Dashboard
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">Management</div>
+            <div class="sidebar-item" onclick="switchPanel('users',this)">
+                <span class="sidebar-icon">👥</span> User Management
+                <span class="sidebar-badge info" id="sideApprovalCount">0</span>
+            </div>
+            <div class="sidebar-item" onclick="switchPanel('orders',this)">
+                <span class="sidebar-icon">📦</span> Order Monitoring
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">Insights</div>
+            <div class="sidebar-item" onclick="switchPanel('analytics',this)">
+                <span class="sidebar-icon">📈</span> Analytics
+            </div>
+            <div class="sidebar-item" onclick="switchPanel('reviews',this)">
+        <span class="sidebar-icon">⭐</span> Ratings & Reviews
+        <span class="sidebar-badge info" id="sideReviewCount">0</span>
+    </div>
+        </div>
+        <hr class="sidebar-divider">
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">System</div>
+            <div class="sidebar-item" onclick="switchPanel('settings',this)">
+                <span class="sidebar-icon">⚙️</span> System Settings
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── MAIN CONTENT ── -->
+    <main class="main-content">
+
+        <!-- DASHBOARD PANEL -->
+        <div class="tab-panel active" id="panel-dashboard">
+            <section class="stats-banner">
+                <div class="stats-banner-content">
+                    <div class="stats-banner-title">Welcome, {{ request.user.first_name|default:"Admin" }}! 🛡️</div>
+                    <div class="stats-banner-sub">System overview for LabHatud — Cantilan, Surigao del Sur</div>
+                </div>
+                <div class="stats-grid-banner">
+                    <div class="stat-item">
+                        <div class="stat-number" id="dashTotalUsers">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="dashTotalOrders">0</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="dashActiveDeliveries">0</div>
+                        <div class="stat-label">Active Deliveries</div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Customers</div>
+                    <div class="kpi-value" id="kpiCustomers">0</div>
+                    <div class="kpi-sub">Registered accounts</div>
+                </div>
+                <div class="kpi-card warning">
+                    <div class="kpi-label">Pending Approvals</div>
+                    <div class="kpi-value" id="kpiPending">0</div>
+                    <div class="kpi-sub">Shops & riders waiting</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-label">Total Revenue</div>
+                    <div class="kpi-value" id="kpiRevenue">₱0</div>
+                    <div class="kpi-sub">Platform-wide earnings</div>
+                </div>
+                <div class="kpi-card info">
+                    <div class="kpi-label">Active Shops</div>
+                    <div class="kpi-value" id="kpiShops">0</div>
+                    <div class="kpi-sub">Currently operating</div>
+                </div>
+            </div>
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Active Riders</div>
+                    <div class="kpi-value" id="kpiRiders">0</div>
+                    <div class="kpi-sub">On the platform</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-label">Orders Today</div>
+                    <div class="kpi-value" id="kpiOrdersToday">0</div>
+                    <div class="kpi-sub">Across all shops</div>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-label">Completion Rate</div>
+                    <div class="kpi-value" id="kpiCompletionRate">0%</div>
+                    <div class="kpi-sub">Orders delivered</div>
+                </div>
+                <div class="kpi-card warning">
+                    <div class="kpi-label">Active Orders</div>
+                    <div class="kpi-value" id="kpiActiveOrders">0</div>
+                    <div class="kpi-sub">In progress</div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Pending Approvals</h2>
+                    <div class="section-subtitle">New shops and riders awaiting verification</div>
+                </div>
+                <a href="#" class="view-all" onclick="switchPanel('users');return false;">Manage All →</a>
+            </div>
+            <div class="user-table-container">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>Applicant</th>
+                            <th>Type</th>
+                            <th>Submitted</th>
+                            <th>Details</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingTableBody">
+                        <tr><td colspan="6" style="text-align:center;">Loading pending approvals...<\/td><\/tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- USER MANAGEMENT PANEL -->
+        <div class="tab-panel" id="panel-users">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">User Management</h2>
+                    <div class="section-subtitle">Approve, monitor, and manage all users from database</div>
+                </div>
+                <button class="btn-primary" onclick="refreshUsers()" style="padding:6px 14px;">⟳ Refresh</button>
+            </div>
+
+            <div class="order-filter-tabs">
+                <div class="filter-tab active" data-role-filter="all" onclick="filterUsersByRole('all',this)">All <span class="tab-count" id="filterCountAll">0</span></div>
+                <div class="filter-tab" data-role-filter="user" onclick="filterUsersByRole('user',this)">Customers <span class="tab-count" id="filterCountUser">0</span></div>
+                <div class="filter-tab" data-role-filter="owner" onclick="filterUsersByRole('owner',this)">Shops <span class="tab-count" id="filterCountOwner">0</span></div>
+                <div class="filter-tab" data-role-filter="rider" onclick="filterUsersByRole('rider',this)">Riders <span class="tab-count" id="filterCountRider">0</span></div>
+                <div class="filter-tab" data-role-filter="admin" onclick="filterUsersByRole('admin',this)">Admins <span class="tab-count" id="filterCountAdmin">0</span></div>
+                <div class="filter-tab" data-role-filter="pending" onclick="filterUsersByRole('pending',this)">Pending <span class="tab-count" id="filterCountPending">0</span></div>
+                <div class="filter-tab" data-role-filter="suspended" onclick="filterUsersByRole('suspended',this)">Suspended <span class="tab-count" id="filterCountSuspended">0</span></div>
+            </div>
+
+            <div class="toolbar">
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text" id="userSearchInput" placeholder="Search by name, email, or role…" onkeyup="searchUsers()">
+                </div>
+                <select class="toolbar-select" id="userSortSelect" onchange="sortUsers()">
+                    <option value="newest">Sort: Newest First</option>
+                    <option value="oldest">Sort: Oldest First</option>
+                    <option value="name_asc">Sort: Name A–Z</option>
+                </select>
+            </div>
+
+            <div class="user-table-container">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Joined</th>
+                            <th>Orders</th>
+                            <th>Status</th>
+                            <th>Last Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="7" style="text-align:center;">Loading users from database...<\/td><\/tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- REPLACE the ORDER MONITORING PANEL section in your admin_dashboard.html with this -->
+
+<!-- ORDER MONITORING PANEL - FULLY FUNCTIONAL -->
+<div class="tab-panel" id="panel-orders">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Order Monitoring</h2>
+            <div class="section-subtitle">System-wide view of all transactions</div>
+        </div>
+        <button class="btn-primary" onclick="refreshOrders()" style="padding:6px 14px;">⟳ Refresh</button>
+    </div>
+
+    <div class="order-filter-tabs">
+        <div class="filter-tab active" data-order-status="all" onclick="filterOrdersByStatus('all',this)">All <span class="tab-count" id="orderCountAll">0</span></div>
+        <div class="filter-tab" data-order-status="pending" onclick="filterOrdersByStatus('pending',this)">Pending <span class="tab-count" id="orderCountPending">0</span></div>
+        <div class="filter-tab" data-order-status="accepted" onclick="filterOrdersByStatus('accepted',this)">Accepted <span class="tab-count" id="orderCountAccepted">0</span></div>
+        <div class="filter-tab" data-order-status="washing" onclick="filterOrdersByStatus('washing',this)">Washing <span class="tab-count" id="orderCountWashing">0</span></div>
+        <div class="filter-tab" data-order-status="drying" onclick="filterOrdersByStatus('drying',this)">Drying <span class="tab-count" id="orderCountDrying">0</span></div>
+        <div class="filter-tab" data-order-status="ready" onclick="filterOrdersByStatus('ready',this)">Ready <span class="tab-count" id="orderCountReady">0</span></div>
+        <div class="filter-tab" data-order-status="out_for_delivery" onclick="filterOrdersByStatus('out_for_delivery',this)">Out for Delivery <span class="tab-count" id="orderCountOutForDelivery">0</span></div>
+        <div class="filter-tab" data-order-status="delivered" onclick="filterOrdersByStatus('delivered',this)">Delivered <span class="tab-count" id="orderCountDelivered">0</span></div>
+    </div>
+
+    <div class="toolbar">
+        <div class="search-box">
+            <span>🔍</span>
+            <input type="text" id="orderSearchInput" placeholder="Search by order #, customer, shop..." onkeyup="searchOrders()">
+        </div>
+        <select class="toolbar-select" id="orderSortSelect" onchange="sortOrders()">
+            <option value="newest">Sort: Newest First</option>
+            <option value="oldest">Sort: Oldest First</option>
+            <option value="amount_high">Sort: Amount High-Low</option>
+        </select>
+    </div>
+
+    <div class="user-table-container">
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Shop</th>
+                    <th>Rider</th>
+                    <th>Type</th>
+                    <th>Weight</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+                <tr><td colspan="11" style="text-align:center;">Loading orders...<\/td><\/tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+        <!-- ANALYTICS PANEL - FULLY FUNCTIONAL -->
+<div class="tab-panel" id="panel-analytics">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Platform Analytics</h2>
+            <div class="section-subtitle">System-wide performance and insights</div>
+        </div>
+        <button class="btn-primary" onclick="refreshAnalytics()" style="padding:6px 14px;">⟳ Refresh</button>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="analytics-filters" style="display: flex; gap: 12px; margin-bottom: 24px; align-items: center; flex-wrap: wrap;">
+        <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 13px; font-weight: 600; color: var(--text2);">Date Range:</label>
+            <select id="analyticsDateRange" onchange="changeDateRange()" style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); font-family: 'DM Sans', sans-serif;">
+                <option value="today">Today</option>
+                <option value="week" selected>Last 7 Days</option>
+                <option value="month">Last 30 Days</option>
+                <option value="year">Last 12 Months</option>
+            </select>
+        </div>
+        <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 13px; font-weight: 600; color: var(--text2);">Chart Type:</label>
+            <select id="analyticsChartType" onchange="changeChartType()" style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); font-family: 'DM Sans', sans-serif;">
+                <option value="revenue">Revenue Analysis</option>
+                <option value="orders">Orders Analysis</option>
+                <option value="users">User Growth</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Analytics KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Total Revenue</div>
+            <div class="kpi-value" id="analyticsTotalRevenue">₱0</div>
+            <div class="kpi-sub">Platform-wide earnings</div>
+            <div class="kpi-trend" id="revenueTrend">↑ 0% vs previous</div>
+        </div>
+        <div class="kpi-card warning">
+            <div class="kpi-label">Total Orders</div>
+            <div class="kpi-value" id="analyticsTotalOrders">0</div>
+            <div class="kpi-sub">All time orders</div>
+            <div class="kpi-trend" id="ordersTrend">↑ 0% vs previous</div>
+        </div>
+        <div class="kpi-card success">
+            <div class="kpi-label">Active Users</div>
+            <div class="kpi-value" id="analyticsActiveUsers">0</div>
+            <div class="kpi-sub">Last 30 days</div>
+            <div class="kpi-trend" id="usersTrend">↑ 0% vs previous</div>
+        </div>
+        <div class="kpi-card info">
+            <div class="kpi-label">Completion Rate</div>
+            <div class="kpi-value" id="analyticsCompletionRate">0%</div>
+            <div class="kpi-sub">Orders delivered</div>
+            <div class="kpi-trend" id="completionTrend">↑ 0% vs previous</div>
+        </div>
+    </div>
+
+    <!-- Main Chart -->
+    <div class="chart-card" style="background: var(--card); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; border: 1.5px solid var(--border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <div class="chart-title" id="chartTitle" style="font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800;">Revenue Overview</div>
+                <div class="chart-sub" id="chartSubtitle" style="font-size: 13px; color: var(--text3);">Last 7 days performance</div>
+            </div>
+            <div class="chart-legend" id="chartLegend" style="display: flex; gap: 16px;"></div>
+        </div>
+        <div id="analyticsMainChart" style="height: 350px; width: 100%;"></div>
+    </div>
+
+    <!-- Secondary Metrics Grid -->
+    <div class="analytics-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 24px;">
+        <div class="chart-card" style="background: var(--card); border-radius: var(--radius); padding: 20px; border: 1.5px solid var(--border);">
+            <div class="chart-title" style="font-size: 16px;">Top Performing Shops</div>
+            <div class="chart-sub" style="margin-bottom: 16px;">By order volume</div>
+            <div id="topShopsList" style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="text-align: center; padding: 20px;">Loading...</div>
+            </div>
+        </div>
+        <div class="chart-card" style="background: var(--card); border-radius: var(--radius); padding: 20px; border: 1.5px solid var(--border);">
+            <div class="chart-title" style="font-size: 16px;">Top Performing Riders</div>
+            <div class="chart-sub" style="margin-bottom: 16px;">By deliveries completed</div>
+            <div id="topRidersList" style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="text-align: center; padding: 20px;">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Distribution Chart -->
+    <div class="analytics-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+        <div class="chart-card" style="background: var(--card); border-radius: var(--radius); padding: 20px; border: 1.5px solid var(--border);">
+            <div class="chart-title" style="font-size: 16px;">Order Status Distribution</div>
+            <div class="chart-sub" style="margin-bottom: 16px;">Current order statuses</div>
+            <div id="statusDistributionChart" style="height: 250px;"></div>
+        </div>
+        <div class="chart-card" style="background: var(--card); border-radius: var(--radius); padding: 20px; border: 1.5px solid var(--border);">
+            <div class="chart-title" style="font-size: 16px;">Payment Method Distribution</div>
+            <div class="chart-sub" style="margin-bottom: 16px;">Customer payment preferences</div>
+            <div id="paymentDistributionChart" style="height: 250px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- RATINGS & REVIEWS PANEL -->
+<div class="tab-panel" id="panel-reviews">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Ratings & Reviews</h2>
+            <div class="section-subtitle">Manage customer feedback and ratings for all shops</div>
+        </div>
+        <button class="btn-primary" onclick="refreshReviews()" style="padding:6px 14px;">⟳ Refresh</button>
+    </div>
+
+    <!-- System Overview Stats -->
+    <div class="kpi-grid" style="margin-bottom: 24px;">
+        <div class="kpi-card">
+            <div class="kpi-label">Overall Platform Rating</div>
+            <div class="kpi-value" id="overallRating">0.0</div>
+            <div class="kpi-sub">⭐ Average rating</div>
+        </div>
+        <div class="kpi-card warning">
+            <div class="kpi-label">Total Reviews</div>
+            <div class="kpi-value" id="totalReviews">0</div>
+            <div class="kpi-sub">All time reviews</div>
+        </div>
+        <div class="kpi-card success">
+            <div class="kpi-label">5-Star Reviews</div>
+            <div class="kpi-value" id="fiveStarCount">0</div>
+            <div class="kpi-sub">⭐ × 5</div>
+        </div>
+        <div class="kpi-card info">
+            <div class="kpi-label">Active Shops</div>
+            <div class="kpi-value" id="activeShopsWithReviews">0</div>
+            <div class="kpi-sub">With customer feedback</div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="analytics-filters" style="display: flex; gap: 12px; margin-bottom: 24px; align-items: center; flex-wrap: wrap;">
+        <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 13px; font-weight: 600;">Filter by Shop:</label>
+            <select id="reviewShopFilter" onchange="filterReviews()" style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card);">
+                <option value="all">All Shops</option>
+            </select>
+        </div>
+        <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 13px; font-weight: 600;">Rating:</label>
+            <select id="reviewRatingFilter" onchange="filterReviews()" style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card);">
+                <option value="all">All Ratings</option>
+                <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                <option value="4">⭐⭐⭐⭐ (4)</option>
+                <option value="3">⭐⭐⭐ (3)</option>
+                <option value="2">⭐⭐ (2)</option>
+                <option value="1">⭐ (1)</option>
+            </select>
+        </div>
+        <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 13px; font-weight: 600;">Sort by:</label>
+            <select id="reviewSortBy" onchange="filterReviews()" style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card);">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="rating_high">Highest Rating</option>
+                <option value="rating_low">Lowest Rating</option>
+            </select>
+        </div>
+        <div class="search-box" style="flex: 1;">
+            <span>🔍</span>
+            <input type="text" id="reviewSearchInput" placeholder="Search by customer name or comment..." onkeyup="filterReviews()">
+        </div>
+    </div>
+
+    <!-- Shop Rating Summary Cards -->
+    <div class="section-header" style="margin-top: 8px;">
+        <h3 class="section-title">Shop Ratings Summary</h3>
+        <span class="view-all">Per shop performance</span>
+    </div>
+    <div class="shops-summary-grid" id="shopsSummaryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 32px;">
+        <!-- Shop summary cards will be populated here -->
+        <div style="text-align: center; padding: 20px;">Loading shops...</div>
+    </div>
+
+    <!-- Reviews List -->
+    <div class="section-header">
+        <h3 class="section-title">Customer Reviews</h3>
+        <span class="view-all" id="reviewCountDisplay">0 reviews</span>
+    </div>
+    <div class="reviews-grid" id="reviewsGrid" style="display: flex; flex-direction: column; gap: 16px;">
+        <!-- Reviews will be populated here -->
+        <div style="text-align: center; padding: 40px;">Loading reviews...</div>
+    </div>
+</div>
+
+        <!-- PAYMENTS PANEL -->
+        <div class="tab-panel" id="panel-payments">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Payment Settings</h2>
+                    <div class="section-subtitle">Configure platform payment methods and fee structures</div>
+                </div>
+            </div>
+            <div class="settings-card">
+                <div class="settings-card-title">Payment Configuration</div>
+                <div class="settings-card-desc">Payment settings will be available soon.</div>
+            </div>
+        </div>
+
+        <!-- SETTINGS PANEL - FULLY FUNCTIONAL -->
+<div class="tab-panel" id="panel-settings">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">System Settings</h2>
+            <div class="section-subtitle">Configure platform-wide behavior and notifications</div>
+        </div>
+        <button class="btn-primary" onclick="saveAllSettings()" style="padding:6px 14px;">💾 Save All Settings</button>
+    </div>
+
+    <!-- Settings Tabs -->
+    <div class="settings-tabs" style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border);">
+        <button class="settings-tab-btn active" onclick="switchSettingsTab('general', this)" style="padding: 10px 20px; background: none; border: none; cursor: pointer; font-weight: 600; color: var(--teal); border-bottom: 2px solid var(--teal);">🏠 General</button>
+        <button class="settings-tab-btn" onclick="switchSettingsTab('appearance', this)" style="padding: 10px 20px; background: none; border: none; cursor: pointer; font-weight: 600; color: var(--text2);">🎨 Appearance</button>
+        <button class="settings-tab-btn" onclick="switchSettingsTab('notifications', this)" style="padding: 10px 20px; background: none; border: none; cursor: pointer; font-weight: 600; color: var(--text2);">🔔 Notifications</button>
+        <button class="settings-tab-btn" onclick="switchSettingsTab('security', this)" style="padding: 10px 20px; background: none; border: none; cursor: pointer; font-weight: 600; color: var(--text2);">🔒 Security</button>
+        <button class="settings-tab-btn" onclick="switchSettingsTab('fees', this)" style="padding: 10px 20px; background: none; border: none; cursor: pointer; font-weight: 600; color: var(--text2);">💰 Fees & Commission</button>
+        <button class="settings-tab-btn" onclick="switchSettingsTab('backup', this)" style="padding: 10px 20px; background: none; border: none; cursor: pointer; font-weight: 600; color: var(--text2);">💾 Backup & Restore</button>
+    </div>
+
+    <!-- General Settings Tab -->
+    <div id="settings-general-tab" class="settings-tab-content active">
+        <div class="settings-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+            <div class="settings-card">
+                <div class="settings-card-title">🏢 Platform Information</div>
+                <div class="settings-card-desc">Basic platform settings</div>
+                
+                <div class="input-group">
+                    <label>Platform Name</label>
+                    <input type="text" id="platformName" value="LabHatud" placeholder="Platform Name">
+                </div>
+                <div class="input-group">
+                    <label>Platform Email</label>
+                    <input type="email" id="platformEmail" value="support@labhatud.com" placeholder="support@labhatud.com">
+                </div>
+                <div class="input-group">
+                    <label>Platform Phone</label>
+                    <input type="text" id="platformPhone" value="+63 912 345 6789" placeholder="Contact number">
+                </div>
+                <div class="input-group">
+                    <label>Address</label>
+                    <textarea id="platformAddress" rows="2">Cantilan, Surigao del Sur, Philippines</textarea>
+                </div>
+                <div class="input-group">
+                    <label>Timezone</label>
+                    <select id="platformTimezone">
+                        <option value="Asia/Manila" selected>Asia/Manila (GMT+8)</option>
+                        <option value="Asia/Singapore">Asia/Singapore</option>
+                        <option value="Asia/Tokyo">Asia/Tokyo</option>
+                        <option value="UTC">UTC</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <div class="settings-card-title">⚙️ Operational Settings</div>
+                <div class="settings-card-desc">Control platform operations</div>
+                
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Maintenance Mode</div>
+                        <div class="toggle-sub">Put platform under maintenance</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="maintenanceMode">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Allow New Registrations</div>
+                        <div class="toggle-sub">Enable/disable user registration</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="allowRegistration" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Require Admin Approval</div>
+                        <div class="toggle-sub">New shops/riders need approval</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="requireApproval" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="input-group">
+                    <label>Maximum Order Limit per Shop</label>
+                    <input type="number" id="maxOrderLimit" value="100" min="1" max="500">
+                </div>
+                <div class="input-group">
+                    <label>Default Currency</label>
+                    <select id="defaultCurrency">
+                        <option value="PHP" selected>Philippine Peso (₱)</option>
+                        <option value="USD">US Dollar ($)</option>
+                        <option value="EUR">Euro (€)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appearance Settings Tab -->
+    <div id="settings-appearance-tab" class="settings-tab-content" style="display: none;">
+        <div class="settings-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+            <div class="settings-card">
+                <div class="settings-card-title">🎨 Theme Settings</div>
+                <div class="settings-card-desc">Customize the platform appearance</div>
+                
+                <div class="input-group">
+                    <label>Primary Color</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="color" id="primaryColor" value="#1a6b5a" style="width: 50px; height: 40px; border-radius: 8px; border: 1.5px solid var(--border);">
+                        <span id="primaryColorValue">#1a6b5a</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Accent Color</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="color" id="accentColor" value="#30c98e" style="width: 50px; height: 40px; border-radius: 8px; border: 1.5px solid var(--border);">
+                        <span id="accentColorValue">#30c98e</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Theme Mode</label>
+                    <select id="themeMode">
+                        <option value="light" selected>Light Mode</option>
+                        <option value="dark">Dark Mode</option>
+                        <option value="auto">Auto (System Preference)</option>
+                    </select>
+                </div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">RTL Layout</div>
+                        <div class="toggle-sub">Right-to-left text direction</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="rtlLayout">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <div class="settings-card-title">📱 Branding</div>
+                <div class="settings-card-desc">Upload platform logo and favicon</div>
+                
+                <div class="input-group">
+                    <label>Platform Logo</label>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <div id="logoPreview" style="width: 60px; height: 60px; background: var(--bg2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 30px;">🏪</div>
+                        <button type="button" class="btn-secondary" onclick="document.getElementById('logoUpload').click()">Upload Logo</button>
+                        <input type="file" id="logoUpload" accept="image/*" style="display: none;" onchange="previewLogo(this)">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Favicon</label>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <div id="faviconPreview" style="width: 32px; height: 32px; background: var(--bg2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;">🖥️</div>
+                        <button type="button" class="btn-secondary" onclick="document.getElementById('faviconUpload').click()">Upload Favicon</button>
+                        <input type="file" id="faviconUpload" accept="image/*" style="display: none;" onchange="previewFavicon(this)">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Settings Tab -->
+    <div id="settings-notifications-tab" class="settings-tab-content" style="display: none;">
+        <div class="settings-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+            <div class="settings-card">
+                <div class="settings-card-title">📧 Email Notifications</div>
+                <div class="settings-card-desc">Configure email alerts</div>
+                
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">New Order Alerts</div>
+                        <div class="toggle-sub">Notify admins of new orders</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="emailNewOrder" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">User Registration Alerts</div>
+                        <div class="toggle-sub">Notify when new users register</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="emailNewUser" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Daily Summary Report</div>
+                        <div class="toggle-sub">Send daily activity summary</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="emailDailyReport">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="input-group">
+                    <label>Admin Email Addresses</label>
+                    <input type="text" id="adminEmails" value="admin@labhatud.com" placeholder="Separate with commas">
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <div class="settings-card-title">🔔 SMS Notifications</div>
+                <div class="settings-card-desc">Configure SMS alerts (if enabled)</div>
+                
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Enable SMS Notifications</div>
+                        <div class="toggle-sub">Send SMS alerts for critical events</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="smsEnabled">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Order Status Updates</div>
+                        <div class="toggle-sub">SMS for order status changes</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="smsOrderUpdate">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="input-group">
+                    <label>Admin Phone Numbers</label>
+                    <input type="text" id="adminPhones" placeholder="e.g., +639123456789">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Settings Tab -->
+    <div id="settings-security-tab" class="settings-tab-content" style="display: none;">
+        <div class="settings-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+            <div class="settings-card">
+                <div class="settings-card-title">🔐 Security Policies</div>
+                <div class="settings-card-desc">Configure security settings</div>
+                
+                <div class="input-group">
+                    <label>Password Minimum Length</label>
+                    <input type="number" id="minPasswordLength" value="8" min="6" max="20">
+                </div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Require Strong Password</div>
+                        <div class="toggle-sub">Letters, numbers, and symbols</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="requireStrongPassword" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="input-group">
+                    <label>Session Timeout (minutes)</label>
+                    <input type="number" id="sessionTimeout" value="30" min="5" max="120">
+                </div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Two-Factor Authentication</div>
+                        <div class="toggle-sub">Require 2FA for admin accounts</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="require2FA">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <div class="settings-card-title">🛡️ Access Control</div>
+                <div class="settings-card-desc">Manage API and access settings</div>
+                
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">API Access</div>
+                        <div class="toggle-sub">Enable REST API for developers</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="apiAccess" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="input-group">
+                    <label>API Rate Limit (requests/minute)</label>
+                    <input type="number" id="apiRateLimit" value="60" min="10" max="1000">
+                </div>
+                <div class="input-group">
+                    <label>Allowed IP Addresses (Optional)</label>
+                    <textarea id="allowedIPs" rows="2" placeholder="Enter IP addresses, one per line"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fees & Commission Settings Tab -->
+    <div id="settings-fees-tab" class="settings-tab-content" style="display: none;">
+        <div class="settings-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+            <div class="settings-card">
+                <div class="settings-card-title">💰 Commission Settings</div>
+                <div class="settings-card-desc">Platform fee structures</div>
+                
+                <div class="input-group">
+                    <label>Shop Commission Rate (%)</label>
+                    <input type="number" id="shopCommissionRate" value="15" min="0" max="100" step="0.5">
+                </div>
+                <div class="input-group">
+                    <label>Rider Commission Rate (%)</label>
+                    <input type="number" id="riderCommissionRate" value="10" min="0" max="100" step="0.5">
+                </div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Apply Commission to All Orders</div>
+                        <div class="toggle-sub">Include all successful transactions</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="applyCommission" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <div class="settings-card-title">💵 Payment Settings</div>
+                <div class="settings-card-desc">Payment processing configuration</div>
+                
+                <div class="input-group">
+                    <label>Minimum Withdrawal Amount</label>
+                    <input type="number" id="minWithdrawal" value="500" min="100" step="100">
+                </div>
+                <div class="input-group">
+                    <label>Maximum Withdrawal Amount</label>
+                    <input type="number" id="maxWithdrawal" value="50000" min="1000" step="1000">
+                </div>
+                <div class="input-group">
+                    <label>Payout Schedule (days)</label>
+                    <select id="payoutSchedule">
+                        <option value="daily">Daily</option>
+                        <option value="weekly" selected>Weekly</option>
+                        <option value="biweekly">Bi-weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup & Restore Tab -->
+    <div id="settings-backup-tab" class="settings-tab-content" style="display: none;">
+        <div class="settings-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+            <div class="settings-card">
+                <div class="settings-card-title">💾 Backup Database</div>
+                <div class="settings-card-desc">Create and manage database backups</div>
+                
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 48px; margin-bottom: 12px;">🗄️</div>
+                    <button class="btn-primary" onclick="createBackup()" style="width: 100%;">Create Backup Now</button>
+                </div>
+                <div id="backupList" style="margin-top: 16px;">
+                    <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Recent Backups:</div>
+                    <ul id="backupFiles" style="list-style: none; padding: 0;">
+                        <li style="padding: 8px; background: var(--bg2); border-radius: 6px; margin-bottom: 4px; display: flex; justify-content: space-between;">
+                            <span>No backups available</span>
+                            <span style="color: var(--text3); font-size: 11px;">—</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <div class="settings-card-title">🔄 Restore System</div>
+                <div class="settings-card-desc">Restore from backup or reset settings</div>
+                
+                <div style="margin-bottom: 16px;">
+                    <label style="font-size: 13px; font-weight: 600;">Restore from Backup</label>
+                    <input type="file" id="restoreFile" accept=".json,.sql,.zip" style="margin-top: 8px; width: 100%; padding: 8px; border: 1.5px solid var(--border); border-radius: 8px;">
+                    <button class="btn-primary" onclick="restoreFromBackup()" style="width: 100%; margin-top: 8px;">Restore Selected File</button>
+                </div>
+                <div style="border-top: 1px solid var(--border); padding-top: 16px;">
+                    <div style="font-weight: 600; margin-bottom: 8px; color: var(--danger);">⚠️ Danger Zone</div>
+                    <button class="btn-danger" onclick="resetSystemSettings()" style="width: 100%;">Reset All Settings to Default</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FOOTER - Outside page-wrapper -->
+    <footer style="background: var(--bg2); border-top: 1px solid var(--border); padding: 24px 32px; margin-top: auto;">
+        <div style="max-width: 1400px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <p style="font-size: 13px; color: var(--text3);">© 2025 LabHatud. Admin Dashboard · All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="userDetailModal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <div class="modal-title" id="userDetailTitle">User Details</div>
+            <button class="modal-close" onclick="closeModal('userDetailModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="userDetailContent"></div>
+            <div class="modal-actions" id="userDetailActions"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="orderDetailModal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <div class="modal-title" id="orderDetailTitle">Order Details</div>
+            <button class="modal-close" onclick="closeModal('orderDetailModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="orderDetailContent"></div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModal('orderDetailModal')">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+        <div class="modal-body">
+            <div class="confirm-icon" id="confirmIcon">⚠️</div>
+            <div class="confirm-title" id="confirmTitle">Are you sure?</div>
+            <div class="confirm-msg" id="confirmMsg">This action cannot be undone.</div>
+            <div class="modal-actions" style="justify-content:center;">
+                <button class="btn-danger" id="confirmOk">Confirm</button>
+                <button class="btn-secondary" onclick="closeModal('confirmModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// CSRF Token setup
+function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+}
+
+// Global state
+let allUsers = [];
+let allOrders = [];
+let currentOrderStatusFilter = 'all';
+let currentOrderSearchTerm = '';
+let currentOrderSort = 'newest';
+
+// Show Toast Notification
+function showToast(title, msg, type = 'success') {
+    const icons = { success:'✅', warning:'⚠️', info:'ℹ️', danger:'❌' };
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-icon">${icons[type] || '🔔'}</div>
+        <div class="toast-body">
+            <div class="toast-title">${title}</div>
+            <div class="toast-msg">${msg}</div>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        <div class="toast-progress"></div>
+    `;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 4600);
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ========== ORDER MANAGEMENT FUNCTIONS ==========
+
+// ========== ORDER MANAGEMENT FUNCTIONS ==========
+
+// Fetch all orders from API
+async function fetchAllOrders() {
+    // Check if orders panel is active and element exists
+    const ordersTableBody = document.getElementById('ordersTableBody');
+    if (!ordersTableBody) {
+        console.log('Orders table body not found, skipping fetch');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/admin/orders/', {
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            allOrders = data.orders || [];
+            updateDashboardOrderStats(data.stats);
+            renderOrdersTable();
+            updateOrderFilterCounts();
+        } else {
+            showToast('Error', data.error || 'Could not load orders', 'danger');
+            const tbody = document.getElementById('ordersTableBody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;">Error loading orders: ' + (data.error || 'Unknown error') + '<\/td><\/tr>';
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        showToast('Error', 'Could not load orders. Please refresh.', 'danger');
+        const tbody = document.getElementById('ordersTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;">Error loading orders. Please try again.<\/td><\/tr>';
+        }
+    }
+}
+
+// Update dashboard with order statistics
+function updateDashboardOrderStats(stats) {
+    if (!stats) return;
+    
+    const dashTotalOrders = document.getElementById('dashTotalOrders');
+    const dashActiveDeliveries = document.getElementById('dashActiveDeliveries');
+    const kpiRevenue = document.getElementById('kpiRevenue');
+    const kpiOrdersToday = document.getElementById('kpiOrdersToday');
+    const kpiCompletionRate = document.getElementById('kpiCompletionRate');
+    const kpiActiveOrders = document.getElementById('kpiActiveOrders');
+    
+    if (dashTotalOrders) dashTotalOrders.innerText = stats.total_orders || 0;
+    if (dashActiveDeliveries) dashActiveDeliveries.innerText = stats.active_orders || 0;
+    if (kpiRevenue) kpiRevenue.innerText = `₱${(stats.total_revenue || 0).toLocaleString()}`;
+    if (kpiOrdersToday) kpiOrdersToday.innerText = stats.today_orders || 0;
+    if (kpiCompletionRate) kpiCompletionRate.innerText = `${stats.completion_rate || 0}%`;
+    if (kpiActiveOrders) kpiActiveOrders.innerText = stats.active_orders || 0;
+}
+
+// Render orders table
+function renderOrdersTable() {
+    const tbody = document.getElementById('ordersTableBody');
+    if (!tbody) {
+        console.log('Orders table body not found');
+        return;
+    }
+    
+    let filtered = [...allOrders];
+    
+    // Apply status filter
+    if (currentOrderStatusFilter !== 'all') {
+        filtered = filtered.filter(o => o.status === currentOrderStatusFilter);
+    }
+    
+    // Apply search
+    if (currentOrderSearchTerm) {
+        const term = currentOrderSearchTerm.toLowerCase();
+        filtered = filtered.filter(o => 
+            (o.order_number || '').toLowerCase().includes(term) ||
+            (o.customer_name || '').toLowerCase().includes(term) ||
+            (o.shop_name || '').toLowerCase().includes(term) ||
+            (o.rider_name || '').toLowerCase().includes(term)
+        );
+    }
+    
+    // Apply sort
+    if (currentOrderSort === 'newest') {
+        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    } else if (currentOrderSort === 'oldest') {
+        filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    } else if (currentOrderSort === 'amount_high') {
+        filtered.sort((a, b) => b.total_amount - a.total_amount);
+    }
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<td><td colspan="11" style="text-align:center;">No orders found.<\/td><\/tr>';
+        return;
+    }
+    
+    let html = '';
+    filtered.forEach(order => {
+        let statusClass = '';
+        if (order.status === 'pending') statusClass = 'badge-warning';
+        else if (order.status === 'delivered') statusClass = 'badge-success';
+        else if (order.status === 'out_for_delivery') statusClass = 'badge-info';
+        else if (order.status === 'cancelled' || order.status === 'rejected') statusClass = 'badge-danger';
+        else statusClass = 'badge-secondary';
+        
+        let statusDisplay = '';
+        if (order.status === 'pending') statusDisplay = 'Pending';
+        else if (order.status === 'accepted') statusDisplay = 'Accepted';
+        else if (order.status === 'washing') statusDisplay = 'Washing';
+        else if (order.status === 'drying') statusDisplay = 'Drying';
+        else if (order.status === 'ready') statusDisplay = 'Ready';
+        else if (order.status === 'out_for_delivery') statusDisplay = 'Out for Delivery';
+        else if (order.status === 'delivered') statusDisplay = 'Delivered';
+        else if (order.status === 'rejected') statusDisplay = 'Rejected';
+        else statusDisplay = order.status;
+        
+        html += `<tr>
+            <td><strong>${escapeHtml(order.order_number)}</strong></td>
+            <td>${order.created_at || 'N/A'}</td>
+            <td>${escapeHtml(order.customer_name)}</td>
+            <td>${escapeHtml(order.shop_name)}</td>
+            <td>${escapeHtml(order.rider_name || 'Not assigned')}</td>
+            <td>${escapeHtml(order.service_type)}</td>
+            <td>${order.weight} kg</td>
+            <td>₱${parseFloat(order.total_amount).toLocaleString()}</td>
+            <td>${escapeHtml(order.payment_method)}</td>
+            <td><span class="badge ${statusClass}">${statusDisplay}</span></td>
+            <td>
+                <div class="tbl-actions">
+                    <button class="btn-tbl btn-tbl-view" onclick="viewOrderDetail('${order.order_number}')">View</button>
+                </div>
+            </td>
+        <\/tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+// Update order filter counts
+function updateOrderFilterCounts() {
+    const counts = {
+        all: allOrders.length,
+        pending: 0,
+        accepted: 0,
+        washing: 0,
+        drying: 0,
+        ready: 0,
+        out_for_delivery: 0,
+        delivered: 0
+    };
+    
+    allOrders.forEach(o => {
+        if (counts.hasOwnProperty(o.status)) {
+            counts[o.status]++;
+        }
+    });
+    
+    const orderCountAll = document.getElementById('orderCountAll');
+    const orderCountPending = document.getElementById('orderCountPending');
+    const orderCountAccepted = document.getElementById('orderCountAccepted');
+    const orderCountWashing = document.getElementById('orderCountWashing');
+    const orderCountDrying = document.getElementById('orderCountDrying');
+    const orderCountReady = document.getElementById('orderCountReady');
+    const orderCountOutForDelivery = document.getElementById('orderCountOutForDelivery');
+    const orderCountDelivered = document.getElementById('orderCountDelivered');
+    
+    if (orderCountAll) orderCountAll.innerText = counts.all;
+    if (orderCountPending) orderCountPending.innerText = counts.pending;
+    if (orderCountAccepted) orderCountAccepted.innerText = counts.accepted;
+    if (orderCountWashing) orderCountWashing.innerText = counts.washing;
+    if (orderCountDrying) orderCountDrying.innerText = counts.drying;
+    if (orderCountReady) orderCountReady.innerText = counts.ready;
+    if (orderCountOutForDelivery) orderCountOutForDelivery.innerText = counts.out_for_delivery;
+    if (orderCountDelivered) orderCountDelivered.innerText = counts.delivered;
+}
+
+function filterOrdersByStatus(status, el) {
+    document.querySelectorAll('#panel-orders .filter-tab').forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    currentOrderStatusFilter = status;
+    renderOrdersTable();
+}
+
+function searchOrders() {
+    const searchInput = document.getElementById('orderSearchInput');
+    if (searchInput) {
+        currentOrderSearchTerm = searchInput.value;
+        renderOrdersTable();
+    }
+}
+
+function sortOrders() {
+    const sortSelect = document.getElementById('orderSortSelect');
+    if (sortSelect) {
+        currentOrderSort = sortSelect.value;
+        renderOrdersTable();
+    }
+}
+
+function refreshOrders() {
+    fetchAllOrders();
+}
+
+async function viewOrderDetail(orderNumber) {
+    try {
+        const response = await fetch(`/api/admin/orders/${orderNumber}/detail/`);
+        const data = await response.json();
+        
+        if (data.success && data.order) {
+            const order = data.order;
+            document.getElementById('orderDetailTitle').innerHTML = `Order #${order.order_number}`;
+            
+            let detailsHtml = `
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">📋 Order Number</span>
+                    <span>${escapeHtml(order.order_number)}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">👤 Customer</span>
+                    <span>${escapeHtml(order.customer_name)}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">📞 Customer Phone</span>
+                    <span>${escapeHtml(order.customer_phone || 'N/A')}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">🏪 Shop</span>
+                    <span>${escapeHtml(order.shop_name)}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">🛵 Rider</span>
+                    <span>${escapeHtml(order.rider_name || 'Not assigned')}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">📅 Order Date</span>
+                    <span>${order.created_at || 'N/A'}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">📅 Pickup Date</span>
+                    <span>${order.pickup_date || 'N/A'}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">⏰ Pickup Time</span>
+                    <span>${order.pickup_time || 'N/A'}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">📍 Pickup Address</span>
+                    <span>${escapeHtml(order.pickup_address || 'N/A')}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">🧺 Service Type</span>
+                    <span>${escapeHtml(order.service_type)}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">⚖️ Weight</span>
+                    <span>${order.weight} kg</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">💰 Total Amount</span>
+                    <span>₱${parseFloat(order.total_amount).toLocaleString()}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">💳 Payment Method</span>
+                    <span>${escapeHtml(order.payment_method)}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">📊 Status</span>
+                    <span>${escapeHtml(order.status_display || order.status)}</span>
+                </div>`;
+            
+            if (order.special_instructions) {
+                detailsHtml += `<div class="modal-detail-row">
+                    <span class="modal-detail-label">📝 Special Instructions</span>
+                    <span>${escapeHtml(order.special_instructions)}</span>
+                </div>`;
+            }
+            
+            if (order.delivered_at) {
+                detailsHtml += `<div class="modal-detail-row">
+                    <span class="modal-detail-label">✅ Delivered At</span>
+                    <span>${order.delivered_at}</span>
+                </div>`;
+            }
+            
+            document.getElementById('orderDetailContent').innerHTML = detailsHtml;
+            document.getElementById('orderDetailModal').classList.add('open');
+        } else {
+            showToast('Error', data.message || 'Could not load order details', 'danger');
+        }
+    } catch (error) {
+        console.error('Error loading order details:', error);
+        showToast('Error', 'Failed to load order details', 'danger');
+    }
+}
+
+// ========== USER MANAGEMENT FUNCTIONS ==========
+
+async function fetchAllUsers() {
+    try {
+        const response = await fetch('/api/admin/users/', {
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        if (!response.ok) throw new Error('Failed to fetch users');
+        const data = await response.json();
+        allUsers = data.users || [];
+        updateDashboardStats(data.stats);
+        updatePendingApprovals(data.pending || []);
+        renderUserTable();
+        updateFilterCounts();
+        return data;
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        showToast('Error', 'Could not load users. Please refresh.', 'danger');
+        document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="7">Error loading users.<\/td><\/tr>';
+    }
+}
+
+function updateDashboardStats(stats) {
+    if (!stats) return;
+    document.getElementById('dashTotalUsers').innerText = stats.total_users || 0;
+    document.getElementById('kpiCustomers').innerText = stats.total_customers || 0;
+    document.getElementById('kpiPending').innerText = stats.pending_approvals || 0;
+    document.getElementById('kpiShops').innerText = stats.active_shops || 0;
+    document.getElementById('kpiRiders').innerText = stats.active_riders || 0;
+    document.getElementById('sideApprovalCount').innerText = stats.pending_approvals || 0;
+}
+
+function updatePendingApprovals(pendingList) {
+    const tbody = document.getElementById('pendingTableBody');
+    const filteredPending = (pendingList || []).filter(u => u.role === 'owner' || u.role === 'rider');
+    
+    if (filteredPending.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No pending approvals for shops or riders.<\/td><\/tr>';
+        return;
+    }
+    
+    let html = '';
+    filteredPending.forEach(u => {
+        const roleType = u.role === 'owner' ? '🏪 Shop Owner' : '🛵 Rider';
+        const details = u.role === 'owner' ? (u.business_name || 'N/A') : (u.vehicle_info || 'N/A');
+        const avatarLetter = (u.full_name || u.username).charAt(0).toUpperCase();
+        
+        html += `<tr>
+            <td>
+                <div class="user-cell">
+                    <div class="user-cell-avatar" style="background:#7c3aed;">${avatarLetter}</div>
+                    <div>
+                        <div class="user-cell-name">${escapeHtml(u.full_name || u.username)}</div>
+                        <div class="user-cell-email">${escapeHtml(u.email)}</div>
+                    </div>
+                </div>
+            <\/td>
+            <td><span class="badge badge-${u.role}">${roleType}</span><\/td>
+            <td>${u.date_joined || 'Recently'}<\/td>
+            <td>${escapeHtml(details)}<\/td>
+            <td><span class="badge badge-pending">Pending<\/span><\/td>
+            <td>
+                <div class="tbl-actions">
+                    <button class="btn-tbl btn-tbl-approve" onclick="approveUserById(${u.id}, '${escapeHtml(u.full_name || u.username)}')">✅ Approve</button>
+                    <button class="btn-tbl btn-tbl-reject" onclick="rejectUserById(${u.id}, '${escapeHtml(u.full_name || u.username)}')">✕ Reject</button>
+                    <button class="btn-tbl btn-tbl-view" onclick="openUserDetailById(${u.id})">View</button>
+                </div>
+            <\/td>
+        <\/tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+function renderUserTable() {
+    let filtered = [...allUsers];
+    
+    if (currentRoleFilter !== 'all') {
+        if (currentRoleFilter === 'pending') {
+            filtered = filtered.filter(u => u.status === 'pending');
+        } else if (currentRoleFilter === 'suspended') {
+            filtered = filtered.filter(u => u.status === 'suspended');
+        } else {
+            filtered = filtered.filter(u => u.role === currentRoleFilter && u.status !== 'pending');
+        }
+    }
+    
+    if (currentSearchTerm) {
+        const term = currentSearchTerm.toLowerCase();
+        filtered = filtered.filter(u => 
+            (u.full_name || u.username || '').toLowerCase().includes(term) ||
+            (u.email || '').toLowerCase().includes(term)
+        );
+    }
+    
+    if (currentSort === 'newest') {
+        filtered.sort((a, b) => new Date(b.date_joined) - new Date(a.date_joined));
+    } else if (currentSort === 'oldest') {
+        filtered.sort((a, b) => new Date(a.date_joined) - new Date(b.date_joined));
+    } else if (currentSort === 'name_asc') {
+        filtered.sort((a, b) => ((a.full_name || a.username) || '').localeCompare((b.full_name || b.username) || ''));
+    }
+    
+    const tbody = document.getElementById('usersTableBody');
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No users found.<\/td><\/tr>';
+        return;
+    }
+    
+    let html = '';
+    filtered.forEach(u => {
+        let roleBadge = '';
+        if (u.role === 'user') roleBadge = '<span class="badge badge-customer">🧺 Customer</span>';
+        else if (u.role === 'owner') roleBadge = '<span class="badge badge-shop">🏪 Shop Owner</span>';
+        else if (u.role === 'rider') roleBadge = '<span class="badge badge-rider">🛵 Rider</span>';
+        else if (u.role === 'admin') roleBadge = '<span class="badge badge-admin">🛡️ Admin</span>';
+        
+        let statusBadge = '';
+        if (u.status === 'active') statusBadge = '<span class="badge badge-active">Active</span>';
+        else if (u.status === 'pending') statusBadge = '<span class="badge badge-pending">Pending</span>';
+        else if (u.status === 'suspended') statusBadge = '<span class="badge badge-suspended">Suspended</span>';
+        
+        const bgColor = u.role === 'owner' ? '#22876f' : (u.role === 'rider' ? '#b08800' : '#7c3aed');
+        const avatarLetter = (u.full_name || u.username).charAt(0).toUpperCase();
+        
+        let actions = `<div class="tbl-actions">
+            <button class="btn-tbl btn-tbl-view" onclick="openUserDetailById(${u.id})">View</button>`;
+        
+        if (u.status === 'pending' && (u.role === 'owner' || u.role === 'rider')) {
+            actions += `<button class="btn-tbl btn-tbl-approve" onclick="approveUserById(${u.id}, '${escapeHtml(u.full_name || u.username)}')">✅ Approve</button>
+                        <button class="btn-tbl btn-tbl-reject" onclick="rejectUserById(${u.id}, '${escapeHtml(u.full_name || u.username)}')">✕ Reject</button>`;
+        } else if ((u.status === 'active' || u.status === 'approved') && u.role !== 'admin') {
+            actions += `<button class="btn-tbl btn-tbl-suspend" onclick="suspendUserById(${u.id})">Suspend</button>`;
+        } else if (u.status === 'suspended') {
+            actions += `<button class="btn-tbl btn-tbl-approve" onclick="reactivateUserById(${u.id})">Reactivate</button>`;
+        }
+        actions += `</div>`;
+        
+        html += `<table>
+            <td>
+                <div class="user-cell">
+                    <div class="user-cell-avatar" style="background:${bgColor};">${avatarLetter}</div>
+                    <div>
+                        <div class="user-cell-name">${escapeHtml(u.full_name || u.username)}</div>
+                        <div class="user-cell-email">${escapeHtml(u.email)}</div>
+                    </div>
+                </div>
+            <\/td>
+            <td>${roleBadge}<\/td>
+            <td>${u.date_joined || 'N/A'}<\/td>
+            <td>${u.total_orders || 0}<\/td>
+            <td>${statusBadge}<\/td>
+            <td>${u.last_active || 'N/A'}<\/td>
+            <td>${actions}<\/td>
+        <\/tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+function updateFilterCounts() {
+    const counts = { all: allUsers.length, user: 0, owner: 0, rider: 0, admin: 0, pending: 0, suspended: 0 };
+    allUsers.forEach(u => {
+        if (u.role === 'user') counts.user++;
+        else if (u.role === 'owner') counts.owner++;
+        else if (u.role === 'rider') counts.rider++;
+        else if (u.role === 'admin') counts.admin++;
+        if (u.status === 'pending') counts.pending++;
+        if (u.status === 'suspended') counts.suspended++;
+    });
+    document.getElementById('filterCountAll').innerText = counts.all;
+    document.getElementById('filterCountUser').innerText = counts.user;
+    document.getElementById('filterCountOwner').innerText = counts.owner;
+    document.getElementById('filterCountRider').innerText = counts.rider;
+    document.getElementById('filterCountAdmin').innerText = counts.admin;
+    document.getElementById('filterCountPending').innerText = counts.pending;
+    document.getElementById('filterCountSuspended').innerText = counts.suspended;
+}
+
+let currentRoleFilter = 'all';
+let currentSearchTerm = '';
+let currentSort = 'newest';
+
+function filterUsersByRole(role, el) {
+    document.querySelectorAll('#panel-users .filter-tab').forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    currentRoleFilter = role;
+    renderUserTable();
+}
+
+function searchUsers() {
+    currentSearchTerm = document.getElementById('userSearchInput').value;
+    renderUserTable();
+}
+
+function sortUsers() {
+    currentSort = document.getElementById('userSortSelect').value;
+    renderUserTable();
+}
+
+function refreshUsers() { 
+    fetchAllUsers(); 
+}
+
+async function approveUserById(userId, userName) {
+    if (!confirm(`Are you sure you want to approve ${userName || 'this user'}?`)) return;
+    
+    try {
+        const response = await fetch(`/api/admin/users/${userId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showToast('Approved', data.message || 'User approved successfully.', 'success');
+            fetchAllUsers();
+        } else {
+            showToast('Error', data.error || 'Could not approve user.', 'danger');
+        }
+    } catch (e) {
+        showToast('Error', 'Network error. Please try again.', 'danger');
+    }
+}
+
+async function rejectUserById(userId, userName) {
+    if (!confirm(`Are you sure you want to reject ${userName || 'this user'}'s application?`)) return;
+    
+    try {
+        const response = await fetch(`/api/admin/users/${userId}/reject/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCSRFToken() }
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showToast('Rejected', data.message || 'User rejected.', 'danger');
+            fetchAllUsers();
+        } else {
+            showToast('Error', data.error || 'Could not reject user.', 'danger');
+        }
+    } catch (e) {
+        showToast('Error', 'Network error. Please try again.', 'danger');
+    }
+}
+
+async function suspendUserById(userId) {
+    if (!confirm('Are you sure you want to suspend this user?')) return;
+    
+    try {
+        const response = await fetch(`/api/admin/users/${userId}/suspend/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCSRFToken() }
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showToast('Suspended', data.message || 'User suspended.', 'warning');
+            fetchAllUsers();
+        } else {
+            showToast('Error', data.error || 'Could not suspend user.', 'danger');
+        }
+    } catch (e) {
+        showToast('Error', 'Network error. Please try again.', 'danger');
+    }
+}
+
+async function reactivateUserById(userId) {
+    if (!confirm('Are you sure you want to reactivate this user?')) return;
+    
+    try {
+        const response = await fetch(`/api/admin/users/${userId}/reactivate/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCSRFToken() }
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showToast('Reactivated', data.message || 'User reactivated.', 'success');
+            fetchAllUsers();
+        } else {
+            showToast('Error', data.error || 'Could not reactivate user.', 'danger');
+        }
+    } catch (e) {
+        showToast('Error', 'Network error. Please try again.', 'danger');
+    }
+}
+
+async function openUserDetailById(userId) {
+    try {
+        const response = await fetch(`/api/admin/users/${userId}/detail/`);
+        const data = await response.json();
+        const user = data.user;
+        if (!user) return;
+        
+        document.getElementById('userDetailTitle').innerHTML = user.full_name || user.username;
+        
+        let detailsHtml = `
+            <div class="modal-detail-row"><span class="modal-detail-label">👤 Full Name</span><span>${escapeHtml(user.full_name || user.username)}</span></div>
+            <div class="modal-detail-row"><span class="modal-detail-label">📧 Email</span><span>${escapeHtml(user.email)}</span></div>
+            <div class="modal-detail-row"><span class="modal-detail-label">🏷️ Role</span><span>${escapeHtml(user.role)}</span></div>
+            <div class="modal-detail-row"><span class="modal-detail-label">📞 Phone</span><span>${escapeHtml(user.phone || 'N/A')}</span></div>
+            <div class="modal-detail-row"><span class="modal-detail-label">📅 Joined</span><span>${user.date_joined}</span></div>
+            <div class="modal-detail-row"><span class="modal-detail-label">📦 Total Orders</span><span>${user.total_orders || 0}</span></div>
+            <div class="modal-detail-row"><span class="modal-detail-label">📊 Status</span><span>${user.is_approved ? 'Approved' : 'Pending'}</span></div>`;
+        
+        if (user.address) detailsHtml += `<div class="modal-detail-row"><span class="modal-detail-label">📍 Address</span><span>${escapeHtml(user.address)}</span></div>`;
+        if (user.role === 'owner' && user.business_name) detailsHtml += `<div class="modal-detail-row"><span class="modal-detail-label">🏪 Business Name</span><span>${escapeHtml(user.business_name)}</span></div>`;
+        if (user.role === 'rider') {
+            if (user.vehicle_model) detailsHtml += `<div class="modal-detail-row"><span class="modal-detail-label">🛵 Vehicle Model</span><span>${escapeHtml(user.vehicle_model)}</span></div>`;
+            if (user.plate_number) detailsHtml += `<div class="modal-detail-row"><span class="modal-detail-label">🔢 Plate Number</span><span>${escapeHtml(user.plate_number)}</span></div>`;
+        }
+        
+        document.getElementById('userDetailContent').innerHTML = detailsHtml;
+        
+        let actions = '';
+        if (!user.is_approved && (user.role === 'owner' || user.role === 'rider')) {
+            actions = `<button class="btn-success" onclick="approveUserById(${user.id}, '${escapeHtml(user.full_name || user.username)}');closeModal('userDetailModal')">✅ Approve</button>
+                       <button class="btn-danger" onclick="rejectUserById(${user.id}, '${escapeHtml(user.full_name || user.username)}');closeModal('userDetailModal')">✕ Reject</button>`;
+        } else if (user.is_active === false) {
+            actions = `<button class="btn-success" onclick="reactivateUserById(${user.id});closeModal('userDetailModal')">Reactivate</button>`;
+        } else if (user.role !== 'admin') {
+            actions = `<button class="btn-warning" onclick="suspendUserById(${user.id});closeModal('userDetailModal')">⏸ Suspend</button>`;
+        }
+        actions += `<button class="btn-secondary" onclick="closeModal('userDetailModal')">Close</button>`;
+        
+        document.getElementById('userDetailActions').innerHTML = actions;
+        document.getElementById('userDetailModal').classList.add('open');
+    } catch (error) {
+        showToast('Error', 'Could not load user details.', 'danger');
+    }
+}
+
+// ========== UI HELPER FUNCTIONS ==========
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+}
+
+function switchPanel(name, el) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    const panel = document.getElementById('panel-' + name);
+    if (panel) panel.classList.add('active');
+    
+    if (el && el.tagName === 'A') {
+        document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+        if (el) el.classList.add('active');
+    }
+    
+    document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+    
+    // Load data only when panel is activated and elements exist
+    if (name === 'users') {
+        fetchAllUsers();
+    } else if (name === 'orders') {
+        // Small delay to ensure DOM is ready
+        setTimeout(() => {
+            if (document.getElementById('ordersTableBody')) {
+                fetchAllOrders();
+            }
+        }, 100);
+    }
+    
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileMenu) mobileMenu.classList.remove('open');
+}
+
+// ========== EVENT LISTENERS ==========
+document.addEventListener('DOMContentLoaded', function() {
+    fetchAllUsers();
+    fetchAllOrders();
+    
+    const hamburger = document.getElementById('hamburger');
+    if (hamburger) {
+        hamburger.addEventListener('click', () => {
+            document.getElementById('mobileMenu').classList.toggle('open');
+        });
+    }
+    
+    const userAvatar = document.getElementById('userAvatar');
+    if (userAvatar) {
+        userAvatar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('dropdownMenu').classList.toggle('show');
+        });
+    }
+    
+    const notifBell = document.getElementById('notifBell');
+    if (notifBell) {
+        notifBell.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('notifPanel').classList.toggle('open');
+        });
+    }
+    
+    const notifClear = document.getElementById('notifClear');
+    if (notifClear) {
+        notifClear.addEventListener('click', () => {
+            document.getElementById('notifList').innerHTML = '<div class="notif-empty">No notifications</div>';
+            document.getElementById('notifBadge').style.display = 'none';
+        });
+    }
+    
+    window.addEventListener('click', () => {
+        document.getElementById('dropdownMenu').classList.remove('show');
+        document.getElementById('notifPanel').classList.remove('open');
+    });
+    
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('mainNav');
+        if (nav) nav.classList.toggle('scrolled', window.scrollY > 40);
+    });
+    
+    document.querySelectorAll('.modal-overlay').forEach(o => {
+        o.addEventListener('click', function(e) { 
+            if (e.target === this) this.classList.remove('open'); 
+        });
+    });
+    
+    showToast('Welcome Admin', 'Dashboard is fully functional.', 'info');
+});
+
+// ========== ANALYTICS FUNCTIONS ==========
+
+let analyticsData = {
+    revenue: [],
+    orders: [],
+    users: [],
+    labels: []
+};
+let currentDateRange = 'week';
+let currentChartType = 'revenue';
+let mainChart = null;
+let statusChart = null;
+let paymentChart = null;
+
+// Fetch analytics data
+async function fetchAnalyticsData() {
+    try {
+        const response = await fetch(`/api/admin/analytics/?range=${currentDateRange}`, {
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch analytics');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            analyticsData = data;
+            updateAnalyticsKPIs(data);
+            updateChart();
+            updateTopShops(data.top_shops || []);
+            updateTopRiders(data.top_riders || []);
+            updateStatusDistribution(data.status_distribution || {});
+            updatePaymentDistribution(data.payment_distribution || {});
+        } else {
+            showToast('Error', data.error || 'Could not load analytics', 'danger');
+        }
+    } catch (error) {
+        console.error('Error fetching analytics:', error);
+        showToast('Error', 'Could not load analytics data', 'danger');
+    }
+}
+
+// Update KPI cards
+function updateAnalyticsKPIs(data) {
+    const totalRevenue = document.getElementById('analyticsTotalRevenue');
+    const totalOrders = document.getElementById('analyticsTotalOrders');
+    const activeUsers = document.getElementById('analyticsActiveUsers');
+    const completionRate = document.getElementById('analyticsCompletionRate');
+    
+    if (totalRevenue) totalRevenue.innerText = `₱${(data.total_revenue || 0).toLocaleString()}`;
+    if (totalOrders) totalOrders.innerText = data.total_orders || 0;
+    if (activeUsers) activeUsers.innerText = data.active_users || 0;
+    if (completionRate) completionRate.innerText = `${data.completion_rate || 0}%`;
+    
+    // Update trends
+    const revenueTrend = document.getElementById('revenueTrend');
+    const ordersTrend = document.getElementById('ordersTrend');
+    const usersTrend = document.getElementById('usersTrend');
+    const completionTrend = document.getElementById('completionTrend');
+    
+    if (revenueTrend) revenueTrend.innerHTML = `${data.revenue_trend || 0}% vs previous`;
+    if (ordersTrend) ordersTrend.innerHTML = `${data.orders_trend || 0}% vs previous`;
+    if (usersTrend) usersTrend.innerHTML = `${data.users_trend || 0}% vs previous`;
+    if (completionTrend) completionTrend.innerHTML = `${data.completion_trend || 0}% vs previous`;
+}
+
+// Update main chart
+function updateChart() {
+    const container = document.getElementById('analyticsMainChart');
+    if (!container) return;
+    
+    let chartData = [];
+    let labels = [];
+    let title = '';
+    let subtitle = '';
+    
+    if (currentChartType === 'revenue') {
+        chartData = analyticsData.revenue || [];
+        labels = analyticsData.labels || [];
+        title = 'Revenue Overview';
+        subtitle = `Last ${getDateRangeText()} revenue performance`;
+    } else if (currentChartType === 'orders') {
+        chartData = analyticsData.orders || [];
+        labels = analyticsData.labels || [];
+        title = 'Orders Overview';
+        subtitle = `Last ${getDateRangeText()} order volume`;
+    } else {
+        chartData = analyticsData.users || [];
+        labels = analyticsData.labels || [];
+        title = 'User Growth';
+        subtitle = `Last ${getDateRangeText()} user registration`;
+    }
+    
+    document.getElementById('chartTitle').innerHTML = title;
+    document.getElementById('chartSubtitle').innerHTML = subtitle;
+    
+    // Create simple bar chart
+    if (!chartData || chartData.length === 0) {
+        container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text3);">No data available</div>';
+        return;
+    }
+    
+    const maxValue = Math.max(...chartData, 1);
+    
+    let chartHtml = '<div style="display: flex; align-items: flex-end; gap: 12px; height: 100%; min-height: 300px;">';
+    
+    for (let i = 0; i < chartData.length; i++) {
+        const heightPercent = (chartData[i] / maxValue) * 100;
+        const barHeight = Math.max(heightPercent, 5);
+        let barColor = '#1a6b5a';
+        
+        if (currentChartType === 'orders') barColor = '#f5a623';
+        if (currentChartType === 'users') barColor = '#7c3aed';
+        
+        let valueDisplay = currentChartType === 'revenue' ? `₱${chartData[i].toLocaleString()}` : chartData[i].toLocaleString();
+        
+        chartHtml += `
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <div style="width: 100%; background: ${barColor}; border-radius: 6px 6px 0 0; height: ${barHeight}%; min-height: 5px; transition: height 0.3s ease; cursor: pointer;" 
+                     onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"></div>
+                <div style="font-size: 11px; color: var(--text3); font-weight: 500; text-align: center;">${labels[i] || ''}</div>
+                <div style="font-size: 10px; color: ${barColor}; font-weight: 700;">${valueDisplay}</div>
+            </div>
+        `;
+    }
+    
+    chartHtml += '</div>';
+    container.innerHTML = chartHtml;
+}
+
+// Update top shops list
+function updateTopShops(shops) {
+    const container = document.getElementById('topShopsList');
+    if (!container) return;
+    
+    if (!shops || shops.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text3);">No shop data available</div>';
+        return;
+    }
+    
+    let html = '';
+    shops.forEach((shop, index) => {
+        const rankColor = index === 0 ? '#FFD700' : (index === 1 ? '#C0C0C0' : (index === 2 ? '#CD7F32' : '#22876f'));
+        html += `
+            <div style="display: flex; align-items: center; gap: 12px; padding: 10px; background: var(--bg2); border-radius: 10px;">
+                <div style="width: 32px; height: 32px; background: ${rankColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white;">${index + 1}</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600;">${escapeHtml(shop.name)}</div>
+                    <div style="font-size: 11px; color: var(--text3);">${shop.orders || 0} orders · ₱${(shop.revenue || 0).toLocaleString()}</div>
+                </div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--teal);">${shop.rating || 0}★</div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// Update top riders list
+function updateTopRiders(riders) {
+    const container = document.getElementById('topRidersList');
+    if (!container) return;
+    
+    if (!riders || riders.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text3);">No rider data available</div>';
+        return;
+    }
+    
+    let html = '';
+    riders.forEach((rider, index) => {
+        const rankColor = index === 0 ? '#FFD700' : (index === 1 ? '#C0C0C0' : (index === 2 ? '#CD7F32' : '#b08800'));
+        html += `
+            <div style="display: flex; align-items: center; gap: 12px; padding: 10px; background: var(--bg2); border-radius: 10px;">
+                <div style="width: 32px; height: 32px; background: ${rankColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white;">${index + 1}</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600;">${escapeHtml(rider.name)}</div>
+                    <div style="font-size: 11px; color: var(--text3);">${rider.deliveries || 0} deliveries · ₱${(rider.earnings || 0).toLocaleString()}</div>
+                </div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--success);">${rider.rating || 0}★</div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// Update status distribution
+function updateStatusDistribution(statuses) {
+    const container = document.getElementById('statusDistributionChart');
+    if (!container) return;
+    
+    const statusColors = {
+        'pending': '#f5a623',
+        'accepted': '#1a6b5a',
+        'washing': '#22876f',
+        'drying': '#30c98e',
+        'ready': '#c49a00',
+        'out_for_delivery': '#4a9eff',
+        'delivered': '#22c97a',
+        'rejected': '#e05252'
+    };
+    
+    const statusNames = {
+        'pending': 'Pending',
+        'accepted': 'Accepted',
+        'washing': 'Washing',
+        'drying': 'Drying',
+        'ready': 'Ready',
+        'out_for_delivery': 'Out for Delivery',
+        'delivered': 'Delivered',
+        'rejected': 'Rejected'
+    };
+    
+    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+    
+    for (const [status, count] of Object.entries(statuses)) {
+        const percentage = ((count / Object.values(statuses).reduce((a, b) => a + b, 0)) * 100).toFixed(1);
+        html += `
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="font-size: 12px;">${statusNames[status] || status}</span>
+                    <span style="font-size: 12px; font-weight: 600;">${count} (${percentage}%)</span>
+                </div>
+                <div style="background: var(--bg2); border-radius: 10px; height: 8px; overflow: hidden;">
+                    <div style="width: ${percentage}%; height: 100%; background: ${statusColors[status] || '#1a6b5a'}; border-radius: 10px;"></div>
+                </div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Update payment distribution
+function updatePaymentDistribution(payments) {
+    const container = document.getElementById('paymentDistributionChart');
+    if (!container) return;
+    
+    const paymentColors = {
+        'gcash': '#007aff',
+        'paypal': '#003087',
+        'cod': '#22c97a'
+    };
+    
+    const paymentNames = {
+        'gcash': 'GCash',
+        'paypal': 'PayPal',
+        'cod': 'Cash on Delivery'
+    };
+    
+    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+    
+    for (const [method, count] of Object.entries(payments)) {
+        const percentage = ((count / Object.values(payments).reduce((a, b) => a + b, 0)) * 100).toFixed(1);
+        html += `
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="font-size: 12px;">${paymentNames[method] || method}</span>
+                    <span style="font-size: 12px; font-weight: 600;">${count} (${percentage}%)</span>
+                </div>
+                <div style="background: var(--bg2); border-radius: 10px; height: 8px; overflow: hidden;">
+                    <div style="width: ${percentage}%; height: 100%; background: ${paymentColors[method] || '#1a6b5a'}; border-radius: 10px;"></div>
+                </div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function getDateRangeText() {
+    switch(currentDateRange) {
+        case 'today': return '24 hours';
+        case 'week': return '7 days';
+        case 'month': return '30 days';
+        case 'year': return '12 months';
+        default: return '7 days';
+    }
+}
+
+function changeDateRange() {
+    const select = document.getElementById('analyticsDateRange');
+    if (select) {
+        currentDateRange = select.value;
+        fetchAnalyticsData();
+    }
+}
+
+function changeChartType() {
+    const select = document.getElementById('analyticsChartType');
+    if (select) {
+        currentChartType = select.value;
+        updateChart();
+    }
+}
+
+function refreshAnalytics() {
+    fetchAnalyticsData();
+}
+
+// ========== SETTINGS MANAGEMENT FUNCTIONS ==========
+
+let currentSettingsTab = 'general';
+
+function switchSettingsTab(tabName, element) {
+    // Update tab buttons
+    document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.color = 'var(--text2)';
+        btn.style.borderBottom = 'none';
+    });
+    if (element) {
+        element.classList.add('active');
+        element.style.color = 'var(--teal)';
+        element.style.borderBottom = '2px solid var(--teal)';
+    }
+    
+    // Hide all tab contents
+    document.getElementById('settings-general-tab').style.display = 'none';
+    document.getElementById('settings-appearance-tab').style.display = 'none';
+    document.getElementById('settings-notifications-tab').style.display = 'none';
+    document.getElementById('settings-security-tab').style.display = 'none';
+    document.getElementById('settings-fees-tab').style.display = 'none';
+    document.getElementById('settings-backup-tab').style.display = 'none';
+    
+    // Show selected tab
+    currentSettingsTab = tabName;
+    document.getElementById(`settings-${tabName}-tab`).style.display = 'block';
+}
+
+// Color picker preview
+document.addEventListener('DOMContentLoaded', function() {
+    const primaryColorPicker = document.getElementById('primaryColor');
+    const accentColorPicker = document.getElementById('accentColor');
+    
+    if (primaryColorPicker) {
+        primaryColorPicker.addEventListener('input', function(e) {
+            document.getElementById('primaryColorValue').textContent = e.target.value;
+            document.documentElement.style.setProperty('--teal', e.target.value);
+        });
+    }
+    
+    if (accentColorPicker) {
+        accentColorPicker.addEventListener('input', function(e) {
+            document.getElementById('accentColorValue').textContent = e.target.value;
+            document.documentElement.style.setProperty('--accent', e.target.value);
+        });
+    }
+});
+
+function previewLogo(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('logoPreview').innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">`;
+            document.getElementById('logoPreview').style.background = 'transparent';
+        };
+        reader.readAsDataURL(input.files[0]);
+        showToast('Logo Uploaded', 'Logo preview updated. Click Save to apply changes.', 'success');
+    }
+}
+
+function previewFavicon(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('faviconPreview').innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+            document.getElementById('faviconPreview').style.background = 'transparent';
+        };
+        reader.readAsDataURL(input.files[0]);
+        showToast('Favicon Uploaded', 'Favicon preview updated. Click Save to apply changes.', 'success');
+    }
+}
+
+// ========== SETTINGS MANAGEMENT FUNCTIONS ==========
+
+// Save all settings to localStorage
+function saveAllSettings() {
+    const settings = {
+        general: {
+            platform_name: document.getElementById('platformName')?.value || 'LabHatud',
+            platform_email: document.getElementById('platformEmail')?.value || '',
+            platform_phone: document.getElementById('platformPhone')?.value || '',
+            platform_address: document.getElementById('platformAddress')?.value || '',
+            timezone: document.getElementById('platformTimezone')?.value || 'Asia/Manila',
+            maintenance_mode: document.getElementById('maintenanceMode')?.checked || false,
+            allow_registration: document.getElementById('allowRegistration')?.checked || true,
+            require_approval: document.getElementById('requireApproval')?.checked || true,
+            max_order_limit: document.getElementById('maxOrderLimit')?.value || 100,
+            currency: document.getElementById('defaultCurrency')?.value || 'PHP'
+        },
+        appearance: {
+            primary_color: document.getElementById('primaryColor')?.value || '#1a6b5a',
+            accent_color: document.getElementById('accentColor')?.value || '#30c98e',
+            theme_mode: document.getElementById('themeMode')?.value || 'light',
+            rtl_layout: document.getElementById('rtlLayout')?.checked || false
+        },
+        notifications: {
+            email_new_order: document.getElementById('emailNewOrder')?.checked || true,
+            email_new_user: document.getElementById('emailNewUser')?.checked || true,
+            email_daily_report: document.getElementById('emailDailyReport')?.checked || false,
+            admin_emails: document.getElementById('adminEmails')?.value || '',
+            sms_enabled: document.getElementById('smsEnabled')?.checked || false,
+            sms_order_update: document.getElementById('smsOrderUpdate')?.checked || false,
+            admin_phones: document.getElementById('adminPhones')?.value || ''
+        },
+        security: {
+            min_password_length: document.getElementById('minPasswordLength')?.value || 8,
+            require_strong_password: document.getElementById('requireStrongPassword')?.checked || true,
+            session_timeout: document.getElementById('sessionTimeout')?.value || 30,
+            require_2fa: document.getElementById('require2FA')?.checked || false,
+            api_access: document.getElementById('apiAccess')?.checked || true,
+            api_rate_limit: document.getElementById('apiRateLimit')?.value || 60,
+            allowed_ips: document.getElementById('allowedIPs')?.value || ''
+        },
+        fees: {
+            shop_commission: document.getElementById('shopCommissionRate')?.value || 15,
+            rider_commission: document.getElementById('riderCommissionRate')?.value || 10,
+            apply_commission: document.getElementById('applyCommission')?.checked || true,
+            min_withdrawal: document.getElementById('minWithdrawal')?.value || 500,
+            max_withdrawal: document.getElementById('maxWithdrawal')?.value || 50000,
+            payout_schedule: document.getElementById('payoutSchedule')?.value || 'weekly'
+        }
+    };
+    
+    // Save to localStorage
+    localStorage.setItem('labhatud_admin_settings', JSON.stringify(settings));
+    
+    // Apply settings to the page immediately
+    applyThemeSettings(settings.appearance);
+    
+    showToast('Settings Saved', 'All settings have been saved successfully! The theme has been applied.', 'success');
+}
+
+// Apply theme settings to the page (colors, dark/light mode, etc.)
+function applyThemeSettings(appearance) {
+    if (!appearance) return;
+    
+    // Apply primary color
+    if (appearance.primary_color) {
+        document.documentElement.style.setProperty('--teal', appearance.primary_color);
+        // Also update any elements that use teal color
+        const tealElements = document.querySelectorAll('.btn-primary, .sidebar-item.active, .filter-tab.active');
+        tealElements.forEach(el => {
+            if (el.classList.contains('btn-primary')) {
+                el.style.background = appearance.primary_color;
+            }
+        });
+    }
+    
+    // Apply accent color
+    if (appearance.accent_color) {
+        document.documentElement.style.setProperty('--accent', appearance.accent_color);
+    }
+    
+    // Apply theme mode (Dark/Light/Auto)
+    if (appearance.theme_mode) {
+        if (appearance.theme_mode === 'dark') {
+            document.body.classList.add('dark-mode');
+        } else if (appearance.theme_mode === 'light') {
+            document.body.classList.remove('dark-mode');
+        } else if (appearance.theme_mode === 'auto') {
+            // Check system preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        }
+    }
+    
+    // Apply RTL layout
+    if (appearance.rtl_layout) {
+        document.body.style.direction = 'rtl';
+        document.body.style.textAlign = 'right';
+    } else {
+        document.body.style.direction = 'ltr';
+        document.body.style.textAlign = 'left';
+    }
+}
+
+// Load saved settings from localStorage and apply to forms and page
+function loadAdminSavedSettings() {
+    const saved = localStorage.getItem('labhatud_admin_settings');
+    if (saved) {
+        try {
+            const settings = JSON.parse(saved);
+            
+            // Load general settings into form fields
+            if (settings.general) {
+                if (document.getElementById('platformName')) document.getElementById('platformName').value = settings.general.platform_name || 'LabHatud';
+                if (document.getElementById('platformEmail')) document.getElementById('platformEmail').value = settings.general.platform_email || 'support@labhatud.com';
+                if (document.getElementById('platformPhone')) document.getElementById('platformPhone').value = settings.general.platform_phone || '+63 912 345 6789';
+                if (document.getElementById('platformAddress')) document.getElementById('platformAddress').value = settings.general.platform_address || '';
+                if (document.getElementById('platformTimezone')) document.getElementById('platformTimezone').value = settings.general.timezone || 'Asia/Manila';
+                if (document.getElementById('maintenanceMode')) document.getElementById('maintenanceMode').checked = settings.general.maintenance_mode || false;
+                if (document.getElementById('allowRegistration')) document.getElementById('allowRegistration').checked = settings.general.allow_registration !== false;
+                if (document.getElementById('requireApproval')) document.getElementById('requireApproval').checked = settings.general.require_approval !== false;
+                if (document.getElementById('maxOrderLimit')) document.getElementById('maxOrderLimit').value = settings.general.max_order_limit || 100;
+                if (document.getElementById('defaultCurrency')) document.getElementById('defaultCurrency').value = settings.general.currency || 'PHP';
+            }
+            
+            // Load appearance settings into form fields
+            if (settings.appearance) {
+                if (document.getElementById('primaryColor')) document.getElementById('primaryColor').value = settings.appearance.primary_color || '#1a6b5a';
+                if (document.getElementById('accentColor')) document.getElementById('accentColor').value = settings.appearance.accent_color || '#30c98e';
+                if (document.getElementById('themeMode')) document.getElementById('themeMode').value = settings.appearance.theme_mode || 'light';
+                if (document.getElementById('rtlLayout')) document.getElementById('rtlLayout').checked = settings.appearance.rtl_layout || false;
+                
+                // Update color value displays
+                const primaryValue = document.getElementById('primaryColorValue');
+                if (primaryValue) primaryValue.textContent = settings.appearance.primary_color || '#1a6b5a';
+                const accentValue = document.getElementById('accentColorValue');
+                if (accentValue) accentValue.textContent = settings.appearance.accent_color || '#30c98e';
+            }
+            
+            // Load notification settings
+            if (settings.notifications) {
+                if (document.getElementById('emailNewOrder')) document.getElementById('emailNewOrder').checked = settings.notifications.email_new_order !== false;
+                if (document.getElementById('emailNewUser')) document.getElementById('emailNewUser').checked = settings.notifications.email_new_user !== false;
+                if (document.getElementById('emailDailyReport')) document.getElementById('emailDailyReport').checked = settings.notifications.email_daily_report || false;
+                if (document.getElementById('adminEmails')) document.getElementById('adminEmails').value = settings.notifications.admin_emails || '';
+                if (document.getElementById('smsEnabled')) document.getElementById('smsEnabled').checked = settings.notifications.sms_enabled || false;
+                if (document.getElementById('smsOrderUpdate')) document.getElementById('smsOrderUpdate').checked = settings.notifications.sms_order_update || false;
+                if (document.getElementById('adminPhones')) document.getElementById('adminPhones').value = settings.notifications.admin_phones || '';
+            }
+            
+            // Load security settings
+            if (settings.security) {
+                if (document.getElementById('minPasswordLength')) document.getElementById('minPasswordLength').value = settings.security.min_password_length || 8;
+                if (document.getElementById('requireStrongPassword')) document.getElementById('requireStrongPassword').checked = settings.security.require_strong_password !== false;
+                if (document.getElementById('sessionTimeout')) document.getElementById('sessionTimeout').value = settings.security.session_timeout || 30;
+                if (document.getElementById('require2FA')) document.getElementById('require2FA').checked = settings.security.require_2fa || false;
+                if (document.getElementById('apiAccess')) document.getElementById('apiAccess').checked = settings.security.api_access !== false;
+                if (document.getElementById('apiRateLimit')) document.getElementById('apiRateLimit').value = settings.security.api_rate_limit || 60;
+                if (document.getElementById('allowedIPs')) document.getElementById('allowedIPs').value = settings.security.allowed_ips || '';
+            }
+            
+            // Load fee settings
+            if (settings.fees) {
+                if (document.getElementById('shopCommissionRate')) document.getElementById('shopCommissionRate').value = settings.fees.shop_commission || 15;
+                if (document.getElementById('riderCommissionRate')) document.getElementById('riderCommissionRate').value = settings.fees.rider_commission || 10;
+                if (document.getElementById('applyCommission')) document.getElementById('applyCommission').checked = settings.fees.apply_commission !== false;
+                if (document.getElementById('minWithdrawal')) document.getElementById('minWithdrawal').value = settings.fees.min_withdrawal || 500;
+                if (document.getElementById('maxWithdrawal')) document.getElementById('maxWithdrawal').value = settings.fees.max_withdrawal || 50000;
+                if (document.getElementById('payoutSchedule')) document.getElementById('payoutSchedule').value = settings.fees.payout_schedule || 'weekly';
+            }
+            
+            // Apply appearance settings to the page (colors, theme, etc.)
+            applyThemeSettings(settings.appearance);
+            
+            console.log('Settings loaded and applied successfully');
+        } catch(e) { 
+            console.log('Error loading settings:', e); 
+        }
+    }
+}
+
+// Listen for system preference changes (for auto mode)
+if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        const saved = localStorage.getItem('labhatud_admin_settings');
+        if (saved) {
+            try {
+                const settings = JSON.parse(saved);
+                if (settings.appearance && settings.appearance.theme_mode === 'auto') {
+                    if (e.matches) {
+                        document.body.classList.add('dark-mode');
+                    } else {
+                        document.body.classList.remove('dark-mode');
+                    }
+                }
+            } catch(e) {}
+        }
+    });
+}
+
+// Backup functions
+function createBackup() {
+    showToast('Backup Started', 'Creating database backup...', 'info');
+    
+    setTimeout(() => {
+        const backupDate = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const backupName = `labhatud_backup_${backupDate}.json`;
+        
+        const backupData = {
+            date: new Date().toISOString(),
+            version: '1.0',
+            settings: {
+                general: {
+                    platform_name: document.getElementById('platformName')?.value || 'LabHatud'
+                }
+            }
+        };
+        
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = backupName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // Add to backup list
+        const backupList = document.getElementById('backupFiles');
+        if (backupList) {
+            const firstItem = backupList.querySelector('li');
+            if (firstItem && firstItem.textContent.includes('No backups')) {
+                backupList.innerHTML = '';
+            }
+            const newBackup = document.createElement('li');
+            newBackup.style.cssText = 'padding: 8px; background: var(--bg2); border-radius: 6px; margin-bottom: 4px; display: flex; justify-content: space-between;';
+            newBackup.innerHTML = `<span>${backupName}</span><span style="color: var(--text3); font-size: 11px;">Just now</span>`;
+            backupList.insertBefore(newBackup, backupList.firstChild);
+        }
+        
+        showToast('Backup Complete', `Backup saved as ${backupName}`, 'success');
+    }, 1000);
+}
+
+function restoreFromBackup() {
+    const fileInput = document.getElementById('restoreFile');
+    if (!fileInput.files || fileInput.files.length === 0) {
+        showToast('No File Selected', 'Please select a backup file to restore.', 'warning');
+        return;
+    }
+    
+    if (!confirm('Restoring from backup will overwrite current settings. Are you sure?')) return;
+    
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const backupData = JSON.parse(e.target.result);
+            showToast('Restore Complete', 'Settings restored from backup.', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } catch (error) {
+            showToast('Restore Failed', 'Invalid backup file format.', 'danger');
+        }
+    };
+    
+    reader.readAsText(file);
+}
+
+function resetSystemSettings() {
+    if (!confirm('⚠️ WARNING: This will reset ALL settings to default values. This action cannot be undone. Are you absolutely sure?')) return;
+    
+    // Reset General Settings
+    if (document.getElementById('platformName')) document.getElementById('platformName').value = 'LabHatud';
+    if (document.getElementById('platformEmail')) document.getElementById('platformEmail').value = 'support@labhatud.com';
+    if (document.getElementById('platformPhone')) document.getElementById('platformPhone').value = '+63 912 345 6789';
+    if (document.getElementById('allowRegistration')) document.getElementById('allowRegistration').checked = true;
+    if (document.getElementById('requireApproval')) document.getElementById('requireApproval').checked = true;
+    if (document.getElementById('maxOrderLimit')) document.getElementById('maxOrderLimit').value = 100;
+    
+    // Reset Appearance
+    if (document.getElementById('primaryColor')) document.getElementById('primaryColor').value = '#1a6b5a';
+    if (document.getElementById('accentColor')) document.getElementById('accentColor').value = '#30c98e';
+    if (document.getElementById('themeMode')) document.getElementById('themeMode').value = 'light';
+    
+    // Reset Notification Settings
+    if (document.getElementById('emailNewOrder')) document.getElementById('emailNewOrder').checked = true;
+    if (document.getElementById('emailNewUser')) document.getElementById('emailNewUser').checked = true;
+    if (document.getElementById('emailDailyReport')) document.getElementById('emailDailyReport').checked = false;
+    
+    // Reset Security Settings
+    if (document.getElementById('minPasswordLength')) document.getElementById('minPasswordLength').value = 8;
+    if (document.getElementById('requireStrongPassword')) document.getElementById('requireStrongPassword').checked = true;
+    if (document.getElementById('sessionTimeout')) document.getElementById('sessionTimeout').value = 30;
+    
+    // Reset Fee Settings
+    if (document.getElementById('shopCommissionRate')) document.getElementById('shopCommissionRate').value = 15;
+    if (document.getElementById('riderCommissionRate')) document.getElementById('riderCommissionRate').value = 10;
+    if (document.getElementById('minWithdrawal')) document.getElementById('minWithdrawal').value = 500;
+    if (document.getElementById('maxWithdrawal')) document.getElementById('maxWithdrawal').value = 50000;
+    
+    showToast('Settings Reset', 'All settings have been reset to default values.', 'success');
+}
+
+// ========== NOTIFICATION SYSTEM FOR ADMIN ==========
+let adminNotifications = [];
+let adminNotificationCheckInterval = null;
+let currentAdminId = null;
+
+// Load notifications from localStorage
+function loadAdminNotifications() {
+    const saved = localStorage.getItem('labhatud_admin_notifications');
+    if (saved) {
+        try {
+            adminNotifications = JSON.parse(saved);
+            renderAdminNotifications();
+            updateAdminNotificationBadge();
+        } catch(e) { console.log('Error loading admin notifications:', e); }
+    }
+}
+
+// Save notifications to localStorage
+function saveAdminNotifications() {
+    localStorage.setItem('labhatud_admin_notifications', JSON.stringify(adminNotifications));
+}
+
+// Add a new notification for admin
+function addAdminNotification(title, message, type = 'info', userId = null, orderId = null, orderNumber = null, userName = null) {
+    const newNotification = {
+        id: Date.now(),
+        title: title,
+        message: message,
+        type: type,
+        userId: userId,
+        orderId: orderId,
+        orderNumber: orderNumber,
+        userName: userName,
+        timestamp: new Date().toISOString(),
+        read: false
+    };
+    
+    adminNotifications.unshift(newNotification);
+    
+    // Keep only last 50 notifications
+    if (adminNotifications.length > 50) {
+        adminNotifications = adminNotifications.slice(0, 50);
+    }
+    
+    saveAdminNotifications();
+    renderAdminNotifications();
+    updateAdminNotificationBadge();
+    
+    // Show toast for new notification
+    showToast(title, message, type);
+    
+    // Send to server
+    saveAdminNotificationToServer(newNotification);
+    
+    return newNotification;
+}
+
+// Save notification to server
+async function saveAdminNotificationToServer(notification) {
+    try {
+        await fetch('/api/notifications/save/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify(notification)
+        });
+    } catch(e) { console.log('Could not save notification to server'); }
+}
+
+// Mark notification as read
+function markAdminNotificationAsRead(notificationId) {
+    const notification = adminNotifications.find(n => n.id == notificationId);
+    if (notification && !notification.read) {
+        notification.read = true;
+        saveAdminNotifications();
+        renderAdminNotifications();
+        updateAdminNotificationBadge();
+    }
+}
+
+// Mark all notifications as read
+function markAllAdminNotificationsAsRead() {
+    let hasUnread = false;
+    adminNotifications.forEach(n => {
+        if (!n.read) {
+            n.read = true;
+            hasUnread = true;
+        }
+    });
+    if (hasUnread) {
+        saveAdminNotifications();
+        renderAdminNotifications();
+        updateAdminNotificationBadge();
+        showToast('Notifications', 'All notifications marked as read', 'info');
+    }
+}
+
+// Clear all notifications
+function clearAllAdminNotifications() {
+    if (adminNotifications.length > 0) {
+        adminNotifications = [];
+        saveAdminNotifications();
+        renderAdminNotifications();
+        updateAdminNotificationBadge();
+        showToast('Notifications Cleared', 'All notifications have been cleared', 'info');
+    }
+}
+
+// Update notification badge
+function updateAdminNotificationBadge() {
+    const unreadCount = adminNotifications.filter(n => !n.read).length;
+    const badge = document.getElementById('notifBadge');
+    const bell = document.getElementById('notifBell');
+    
+    if (badge) {
+        if (unreadCount > 0) {
+            badge.style.display = 'flex';
+            badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+            badge.classList.add('has-unread');
+            if (bell) bell.classList.add('has-notification');
+            document.title = `(${unreadCount}) LabHatud | Admin Dashboard`;
+        } else {
+            badge.style.display = 'none';
+            badge.classList.remove('has-unread');
+            if (bell) bell.classList.remove('has-notification');
+            document.title = 'LabHatud | Admin Dashboard';
+        }
+    }
+}
+
+// Render notifications in panel
+function renderAdminNotifications() {
+    const notifList = document.getElementById('notifList');
+    if (!notifList) return;
+    
+    if (adminNotifications.length === 0) {
+        notifList.innerHTML = '<div class="notif-empty">No notifications</div>';
+        return;
+    }
+    
+    let html = '';
+    adminNotifications.forEach(notif => {
+        const timeAgo = getAdminTimeAgoString(notif.timestamp);
+        const notifClass = notif.read ? '' : 'unread';
+        
+        let icon = '🔔';
+        if (notif.type === 'user') icon = '👤';
+        else if (notif.type === 'order') icon = '📦';
+        else if (notif.type === 'success') icon = '✅';
+        else if (notif.type === 'warning') icon = '⚠️';
+        else if (notif.type === 'danger') icon = '❌';
+        else if (notif.type === 'info') icon = 'ℹ️';
+        
+        html += `
+            <div class="notif-item ${notifClass}" data-id="${notif.id}" onclick="handleAdminNotificationClick(${notif.id}, '${notif.type || ''}', ${notif.userId || null}, '${notif.orderNumber || ''}')">
+                <div class="notif-dot ${notif.read ? 'read' : ''}"></div>
+                <div class="notif-item-body">
+                    <div class="notif-item-title">${icon} ${escapeHtml(notif.title)}</div>
+                    <div class="notif-item-message">${escapeHtml(notif.message)}</div>
+                    <div class="notif-item-time">${timeAgo}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    notifList.innerHTML = html;
+}
+
+// Handle notification click
+function handleAdminNotificationClick(notificationId, type, userId, orderNumber) {
+    markAdminNotificationAsRead(notificationId);
+    
+    if (type === 'user' && userId) {
+        // Open user details modal
+        openUserDetailById(userId);
+        // Switch to users panel
+        switchPanel('users');
+    } else if (type === 'order' && orderNumber) {
+        // Open order details
+        viewOrderDetail(orderNumber);
+        // Switch to orders panel
+        switchPanel('orders');
+    }
+    
+    // Close notification panel
+    const notifPanel = document.getElementById('notifPanel');
+    if (notifPanel) notifPanel.classList.remove('open');
+}
+
+// Get time ago string
+function getAdminTimeAgoString(timestamp) {
+    const now = new Date();
+    const notifTime = new Date(timestamp);
+    const diffMs = now - notifTime;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return notifTime.toLocaleDateString();
+}
+
+// ========== CHECK FOR NEW USER REGISTRATIONS ==========
+let lastCheckedUserCount = 0;
+
+async function checkNewUserRegistrations() {
+    try {
+        const response = await fetch('/api/admin/users/recent/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.new_users && data.new_users.length > 0) {
+                data.new_users.forEach(user => {
+                    // Check if already notified
+                    const alreadyNotified = adminNotifications.some(n => 
+                        n.userId === user.id && 
+                        (n.title === '👤 New User Registration' || n.title === '🏪 New Shop Registration' || n.title === '🛵 New Rider Registration')
+                    );
+                    
+                    if (!alreadyNotified && !user.already_notified) {
+                        let title = '';
+                        let type = 'user';
+                        
+                        if (user.role === 'owner') {
+                            title = '🏪 New Shop Registration!';
+                        } else if (user.role === 'rider') {
+                            title = '🛵 New Rider Registration!';
+                        } else {
+                            title = '👤 New User Registration';
+                        }
+                        
+                        addAdminNotification(
+                            title,
+                            `${user.full_name || user.username} (${user.email}) has registered as a ${user.role_display || user.role}.`,
+                            'user',
+                            user.id,
+                            null,
+                            null,
+                            user.full_name || user.username
+                        );
+                        
+                        // Update pending approvals count
+                        const pendingBadge = document.getElementById('sideApprovalCount');
+                        if (pendingBadge && user.role !== 'user') {
+                            const currentCount = parseInt(pendingBadge.textContent) || 0;
+                            pendingBadge.textContent = currentCount + 1;
+                        }
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.log('Error checking new users:', error);
+    }
+}
+
+// ========== CHECK FOR PENDING APPROVALS ==========
+async function checkPendingApprovals() {
+    try {
+        const response = await fetch('/api/admin/users/pending-count/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.pending_count > 0) {
+                const alreadyNotified = adminNotifications.some(n => 
+                    n.title === '📋 Pending Approvals Alert' && 
+                    new Date(n.timestamp).toDateString() === new Date().toDateString()
+                );
+                
+                if (!alreadyNotified && data.pending_count > 0) {
+                    addAdminNotification(
+                        '📋 Pending Approvals Alert',
+                        `There are ${data.pending_count} shop/rider accounts waiting for your approval.`,
+                        'warning',
+                        null,
+                        null,
+                        null,
+                        null
+                    );
+                }
+                
+                // Update sidebar badge
+                const sideBadge = document.getElementById('sideApprovalCount');
+                if (sideBadge) sideBadge.textContent = data.pending_count;
+                
+                // Update KPI on dashboard
+                const kpiPending = document.getElementById('kpiPending');
+                if (kpiPending) kpiPending.textContent = data.pending_count;
+            }
+        }
+    } catch (error) {
+        console.log('Error checking pending approvals:', error);
+    }
+}
+
+// ========== CHECK FOR NEW ORDERS ==========
+let lastOrderCount = 0;
+
+async function checkNewOrdersForAdmin() {
+    try {
+        const response = await fetch('/api/admin/orders/recent/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.new_orders && data.new_orders.length > 0) {
+                data.new_orders.forEach(order => {
+                    // Check if already notified
+                    const alreadyNotified = adminNotifications.some(n => 
+                        n.orderNumber === order.order_number && 
+                        n.title === '📦 New Order Placed'
+                    );
+                    
+                    if (!alreadyNotified) {
+                        addAdminNotification(
+                            '📦 New Order Placed!',
+                            `Order #${order.order_number} has been placed by ${order.customer_name} at ${order.shop_name}. Total: ₱${order.total_amount}`,
+                            'order',
+                            null,
+                            order.id,
+                            order.order_number,
+                            order.customer_name
+                        );
+                        
+                        // Update dashboard counts
+                        const totalOrders = document.getElementById('dashTotalOrders');
+                        if (totalOrders) {
+                            const currentCount = parseInt(totalOrders.textContent) || 0;
+                            totalOrders.textContent = currentCount + 1;
+                        }
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.log('Error checking new orders:', error);
+    }
+}
+
+// ========== CHECK FOR SYSTEM ISSUES ==========
+async function checkSystemIssues() {
+    try {
+        const response = await fetch('/api/admin/system/health/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Check for stuck orders (pending for more than 2 hours)
+            if (data.stuck_orders && data.stuck_orders > 0) {
+                const alreadyNotified = adminNotifications.some(n => 
+                    n.title === '⚠️ Stuck Orders Detected' && 
+                    new Date(n.timestamp).toDateString() === new Date().toDateString()
+                );
+                
+                if (!alreadyNotified) {
+                    addAdminNotification(
+                        '⚠️ Stuck Orders Detected',
+                        `${data.stuck_orders} orders have been pending for more than 2 hours. Please review.`,
+                        'warning',
+                        null,
+                        null,
+                        null,
+                        null
+                    );
+                }
+            }
+            
+            // Check for high API usage
+            if (data.api_usage && data.api_usage > 80) {
+                addAdminNotification(
+                    '📊 High API Usage',
+                    `API usage is at ${data.api_usage}% of the daily limit.`,
+                    'info',
+                    null,
+                    null,
+                    null,
+                    null
+                );
+            }
+        }
+    } catch (error) {
+        console.log('Error checking system health:', error);
+    }
+}
+
+// ========== CHECK DAILY REVENUE SUMMARY ==========
+async function checkDailyRevenueSummary() {
+    const lastSummaryDate = localStorage.getItem('labhatud_admin_summary_date');
+    const today = new Date().toDateString();
+    
+    if (lastSummaryDate !== today) {
+        try {
+            const response = await fetch('/api/admin/daily-summary/', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                setTimeout(() => {
+                    addAdminNotification(
+                        '📊 Daily Platform Summary',
+                        `Today: ${data.today_orders} orders · ₱${data.today_revenue} revenue · ${data.new_users} new users · ${data.pending_approvals} pending approvals`,
+                        'info',
+                        null,
+                        null,
+                        null,
+                        null
+                    );
+                    localStorage.setItem('labhatud_admin_summary_date', today);
+                }, 3000);
+            }
+        } catch (error) {
+            console.log('Error fetching daily summary:', error);
+        }
+    }
+}
+
+// ========== CHECK COMPLETED DELIVERIES ==========
+async function checkCompletedDeliveriesForAdmin() {
+    try {
+        const response = await fetch('/api/admin/completed-deliveries/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.completed && data.completed.length > 0) {
+                data.completed.forEach(order => {
+                    const alreadyNotified = adminNotifications.some(n => 
+                        n.orderNumber === order.order_number && 
+                        n.title.includes('Delivered')
+                    );
+                    
+                    if (!alreadyNotified) {
+                        addAdminNotification(
+                            '✅ Order Delivered',
+                            `Order #${order.order_number} has been successfully delivered to ${order.customer_name}.`,
+                            'success',
+                            null,
+                            order.id,
+                            order.order_number,
+                            order.customer_name
+                        );
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.log('Error checking completed deliveries:', error);
+    }
+}
+
+// ========== WELCOME NOTIFICATION ==========
+function showAdminWelcomeNotification() {
+    const hasSeenWelcome = localStorage.getItem('labhatud_admin_welcome_shown');
+    const adminName = document.querySelector('.stats-banner-title')?.textContent || 'Admin';
+    
+    if (!hasSeenWelcome) {
+        setTimeout(() => {
+            addAdminNotification(
+                '👋 Welcome to LabHatud Admin Dashboard!',
+                `Welcome ${adminName}! Monitor platform activity, manage users, and track orders from this dashboard.`,
+                'success'
+            );
+            localStorage.setItem('labhatud_admin_welcome_shown', 'true');
+        }, 1500);
+    }
+}
+
+// ========== START NOTIFICATION CHECKING ==========
+function startAdminNotificationChecking() {
+    // Check immediately
+    checkNewUserRegistrations();
+    checkPendingApprovals();
+    checkNewOrdersForAdmin();
+    checkSystemIssues();
+    checkCompletedDeliveriesForAdmin();
+    
+    // Check daily summary (once per day)
+    checkDailyRevenueSummary();
+    
+    // Then check every 30 seconds
+    if (adminNotificationCheckInterval) {
+        clearInterval(adminNotificationCheckInterval);
+    }
+    adminNotificationCheckInterval = setInterval(() => {
+        checkNewUserRegistrations();
+        checkPendingApprovals();
+        checkNewOrdersForAdmin();
+        checkSystemIssues();
+        checkCompletedDeliveriesForAdmin();
+    }, 30000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Load existing notifications
+    loadAdminNotifications();
+    
+    // Load saved admin settings into form fields AND apply to page
+    loadAdminSavedSettings();
+    
+    // Show welcome notification
+    showAdminWelcomeNotification();
+    
+    // Start checking for updates
+    startAdminNotificationChecking();
+    
+    // Setup clear all button
+    const notifClear = document.getElementById('notifClear');
+    if (notifClear) {
+        notifClear.onclick = function(e) {
+            e.stopPropagation();
+            clearAllAdminNotifications();
+        };
+    }
+    
+    // Close panel when clicking outside
+    document.addEventListener('click', function(e) {
+        const notifPanel = document.getElementById('notifPanel');
+        const notifBell = document.getElementById('notifBell');
+        if (notifPanel && notifBell && !notifBell.contains(e.target) && !notifPanel.contains(e.target)) {
+            notifPanel.classList.remove('open');
+        }
+    });
+    
+    // Replace notification bell click handler
+    const notifBell = document.getElementById('notifBell');
+    if (notifBell) {
+        const newBell = notifBell.cloneNode(true);
+        notifBell.parentNode.replaceChild(newBell, notifBell);
+        
+        newBell.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const notifPanel = document.getElementById('notifPanel');
+            if (notifPanel) {
+                notifPanel.classList.toggle('open');
+            }
+        });
+    }
+    
+    const notifPanel = document.getElementById('notifPanel');
+    if (notifPanel) {
+        notifPanel.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+    
+    console.log('Admin dashboard fully initialized');
+});
+
+// Test function for debugging
+function testAdminNotification() {
+    addAdminNotification('🔔 Test Notification', 'This is a test notification for the admin dashboard.', 'info');
+}
+
+// Refresh pending approvals count on user management actions
+function refreshPendingApprovalsCount() {
+    checkPendingApprovals();
+}
+
+// Apply saved settings to the live page (colors, theme, etc.)
+function applySavedSettingsToPage() {
+    const saved = localStorage.getItem('labhatud_admin_settings');
+    if (saved) {
+        try {
+            const settings = JSON.parse(saved);
+            
+            // Apply appearance settings
+            if (settings.appearance) {
+                // Apply primary color
+                if (settings.appearance.primary_color) {
+                    document.documentElement.style.setProperty('--teal', settings.appearance.primary_color);
+                    // Also update the color picker value
+                    const primaryPicker = document.getElementById('primaryColor');
+                    if (primaryPicker) primaryPicker.value = settings.appearance.primary_color;
+                    const primaryValue = document.getElementById('primaryColorValue');
+                    if (primaryValue) primaryValue.textContent = settings.appearance.primary_color;
+                }
+                
+                // Apply accent color
+                if (settings.appearance.accent_color) {
+                    document.documentElement.style.setProperty('--accent', settings.appearance.accent_color);
+                    const accentPicker = document.getElementById('accentColor');
+                    if (accentPicker) accentPicker.value = settings.appearance.accent_color;
+                    const accentValue = document.getElementById('accentColorValue');
+                    if (accentValue) accentValue.textContent = settings.appearance.accent_color;
+                }
+                
+                // Apply theme mode (dark/light)
+                if (settings.appearance.theme_mode) {
+                    applyThemeMode(settings.appearance.theme_mode);
+                }
+                
+                // Apply RTL layout
+                if (settings.appearance.rtl_layout) {
+                    document.body.style.direction = 'rtl';
+                } else {
+                    document.body.style.direction = 'ltr';
+                }
+            }
+            
+            console.log('Settings applied to page successfully');
+        } catch(e) { 
+            console.log('Error applying settings:', e); 
+        }
+    }
+}
+
+// Apply theme mode (light/dark/auto)
+function applyThemeMode(mode) {
+    if (mode === 'dark') {
+        document.body.classList.add('dark-mode');
+        document.documentElement.style.setProperty('--bg', '#1a1a2e');
+        document.documentElement.style.setProperty('--bg2', '#16213e');
+        document.documentElement.style.setProperty('--card', '#0f3460');
+        document.documentElement.style.setProperty('--text', '#eaeaea');
+        document.documentElement.style.setProperty('--text2', '#b0b0b0');
+        document.documentElement.style.setProperty('--border', '#2d3a5e');
+    } else if (mode === 'light') {
+        document.body.classList.remove('dark-mode');
+        document.documentElement.style.setProperty('--bg', '#f4f7f6');
+        document.documentElement.style.setProperty('--bg2', '#eaf0ee');
+        document.documentElement.style.setProperty('--card', '#ffffff');
+        document.documentElement.style.setProperty('--text', '#1a2320');
+        document.documentElement.style.setProperty('--text2', '#4a5c56');
+        document.documentElement.style.setProperty('--border', '#d4e0db');
+    } else if (mode === 'auto') {
+        // Check system preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            applyThemeMode('dark');
+        } else {
+            applyThemeMode('light');
+        }
+    }
+}
+
+
+// ========== RATINGS & REVIEWS MANAGEMENT ==========
+let allReviews = [];
+let allShops = [];
+let currentReviewFilter = {
+    shopId: 'all',
+    rating: 'all',
+    sortBy: 'newest',
+    search: ''
+};
+
+// Fetch all reviews from API
+async function fetchAllReviews() {
+    try {
+        const response = await fetch('/api/admin/reviews/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch reviews');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            allReviews = data.reviews || [];
+            allShops = data.shops || [];
+            updateReviewStats(data.stats);
+            renderShopsSummary(allShops, allReviews);
+            populateShopFilter(allShops);
+            renderReviewsList();
+        } else {
+            showToast('Error', data.error || 'Could not load reviews', 'danger');
+        }
+    } catch (error) {
+        console.error('Error fetching reviews:', error);
+        showToast('Error', 'Could not load reviews. Please refresh.', 'danger');
+    }
+}
+
+// Update review statistics
+function updateReviewStats(stats) {
+    const overallRating = document.getElementById('overallRating');
+    const totalReviews = document.getElementById('totalReviews');
+    const fiveStarCount = document.getElementById('fiveStarCount');
+    const activeShopsWithReviews = document.getElementById('activeShopsWithReviews');
+    const sideReviewCount = document.getElementById('sideReviewCount');
+    
+    if (overallRating) overallRating.textContent = stats.overall_rating || '0.0';
+    if (totalReviews) totalReviews.textContent = stats.total_reviews || 0;
+    if (fiveStarCount) fiveStarCount.textContent = stats.five_star_count || 0;
+    if (activeShopsWithReviews) activeShopsWithReviews.textContent = stats.active_shops || 0;
+    if (sideReviewCount) sideReviewCount.textContent = stats.total_reviews || 0;
+}
+
+// Populate shop filter dropdown
+function populateShopFilter(shops) {
+    const filterSelect = document.getElementById('reviewShopFilter');
+    if (!filterSelect) return;
+    
+    filterSelect.innerHTML = '<option value="all">All Shops</option>';
+    shops.forEach(shop => {
+        filterSelect.innerHTML += `<option value="${shop.id}">${escapeHtml(shop.name)} (${shop.review_count} reviews)</option>`;
+    });
+}
+
+// Render shops summary cards
+function renderShopsSummary(shops, reviews) {
+    const container = document.getElementById('shopsSummaryGrid');
+    if (!container) return;
+    
+    if (!shops || shops.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 20px;">No shops available</div>';
+        return;
+    }
+    
+    // Calculate per-shop ratings
+    const shopRatings = {};
+    reviews.forEach(review => {
+        if (!shopRatings[review.shop_id]) {
+            shopRatings[review.shop_id] = { total: 0, count: 0, ratings: [] };
+        }
+        shopRatings[review.shop_id].total += review.rating;
+        shopRatings[review.shop_id].count += 1;
+        shopRatings[review.shop_id].ratings.push(review.rating);
+    });
+    
+    let html = '';
+    shops.forEach(shop => {
+        const ratingData = shopRatings[shop.id] || { total: 0, count: 0, ratings: [] };
+        const avgRating = ratingData.count > 0 ? (ratingData.total / ratingData.count).toFixed(1) : 0;
+        
+        // Calculate rating distribution
+        const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+        ratingData.ratings.forEach(r => { distribution[r] = (distribution[r] || 0) + 1; });
+        
+        html += `
+            <div class="shop-summary-card" onclick="filterByShop(${shop.id})">
+                <div class="shop-summary-name">
+                    <span>🏪 ${escapeHtml(shop.name)}</span>
+                    <span class="shop-summary-review-count">${ratingData.count} reviews</span>
+                </div>
+                <div class="shop-summary-rating">
+                    <div class="shop-summary-stars">${renderStars(avgRating)}</div>
+                    <span style="font-weight: 700; color: var(--teal);">${avgRating}</span>
+                </div>
+                <div class="rating-distribution">
+                    ${renderRatingDistribution(distribution, ratingData.count)}
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// Render rating distribution bars
+function renderRatingDistribution(distribution, total) {
+    let html = '';
+    for (let i = 5; i >= 1; i--) {
+        const percentage = total > 0 ? (distribution[i] / total * 100) : 0;
+        html += `
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; margin: 4px 0;">
+                <span style="width: 25px;">${i}★</span>
+                <div class="progress-bar" style="flex: 1;">
+                    <div class="progress-fill" style="width: ${percentage}%;"></div>
+                </div>
+                <span style="width: 35px;">${distribution[i]}</span>
+            </div>
+        `;
+    }
+    return html;
+}
+
+// Render stars HTML
+function renderStars(rating) {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i <= fullStars) {
+            stars += '⭐';
+        } else if (i === fullStars + 1 && hasHalfStar) {
+            stars += '½';
+        } else {
+            stars += '☆';
+        }
+    }
+    return stars;
+}
+
+// Filter reviews by shop
+function filterByShop(shopId) {
+    const filterSelect = document.getElementById('reviewShopFilter');
+    if (filterSelect) filterSelect.value = shopId;
+    filterReviews();
+    
+    // Scroll to reviews section
+    document.getElementById('reviewsGrid').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Filter and render reviews list
+function filterReviews() {
+    const shopFilter = document.getElementById('reviewShopFilter')?.value || 'all';
+    const ratingFilter = document.getElementById('reviewRatingFilter')?.value || 'all';
+    const sortBy = document.getElementById('reviewSortBy')?.value || 'newest';
+    const searchTerm = document.getElementById('reviewSearchInput')?.value.toLowerCase() || '';
+    
+    currentReviewFilter = { shopId: shopFilter, rating: ratingFilter, sortBy: sortBy, search: searchTerm };
+    renderReviewsList();
+}
+
+// Render reviews list
+function renderReviewsList() {
+    const container = document.getElementById('reviewsGrid');
+    const countDisplay = document.getElementById('reviewCountDisplay');
+    
+    if (!container) return;
+    
+    let filtered = [...allReviews];
+    
+    // Apply shop filter
+    if (currentReviewFilter.shopId !== 'all') {
+        filtered = filtered.filter(r => r.shop_id == currentReviewFilter.shopId);
+    }
+    
+    // Apply rating filter
+    if (currentReviewFilter.rating !== 'all') {
+        filtered = filtered.filter(r => r.rating == currentReviewFilter.rating);
+    }
+    
+    // Apply search filter
+    if (currentReviewFilter.search) {
+        filtered = filtered.filter(r => 
+            r.customer_name.toLowerCase().includes(currentReviewFilter.search) ||
+            (r.comment && r.comment.toLowerCase().includes(currentReviewFilter.search)) ||
+            r.shop_name.toLowerCase().includes(currentReviewFilter.search)
+        );
+    }
+    
+    // Apply sorting
+    filtered.sort((a, b) => {
+        if (currentReviewFilter.sortBy === 'newest') {
+            return new Date(b.created_at) - new Date(a.created_at);
+        } else if (currentReviewFilter.sortBy === 'oldest') {
+            return new Date(a.created_at) - new Date(b.created_at);
+        } else if (currentReviewFilter.sortBy === 'rating_high') {
+            return b.rating - a.rating;
+        } else if (currentReviewFilter.sortBy === 'rating_low') {
+            return a.rating - b.rating;
+        }
+        return 0;
+    });
+    
+    // Update count display
+    if (countDisplay) countDisplay.textContent = `${filtered.length} reviews`;
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 60px; background: var(--card); border-radius: var(--radius); border: 1.5px dashed var(--border);">📭 No reviews found</div>';
+        return;
+    }
+    
+    let html = '';
+    filtered.forEach(review => {
+        html += `
+    <div class="review-card" data-review-id="${review.id}">
+        <div class="review-header">
+            <div class="reviewer-info">
+                <div class="reviewer-avatar" style="background: ${review.rating >= 4 ? '#22c97a' : (review.rating >= 3 ? '#f5a623' : '#e05252')}">
+                    ${review.customer_name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                    <div class="reviewer-name">${escapeHtml(review.customer_name)}</div>
+                    <div class="reviewer-email">${escapeHtml(review.customer_email || 'No email')}</div>
+                </div>
+            </div>
+            <div class="review-rating">
+                ${renderStars(review.rating)}
+                <span style="font-size: 12px; font-weight: 700; margin-left: 4px;">(${review.rating})</span>
+            </div>
+        </div>
+        <div class="review-shop-info">
+            <span>🏪</span>
+            <span class="review-shop-name">${escapeHtml(review.shop_name)}</span>
+            <span class="review-date">📅 ${new Date(review.created_at).toLocaleDateString()}</span>
+            ${review.order_number ? `<span class="review-order-link">📦 Order #${escapeHtml(review.order_number)}</span>` : ''}
+        </div>
+        ${review.comment ? `<div class="review-comment">💬 "${escapeHtml(review.comment)}"</div>` : '<div class="review-comment" style="color: var(--text3);">No comment provided</div>'}
+        <div class="review-actions">
+            <button class="btn-delete-review" onclick="deleteReview(${review.id}, '${escapeHtml(review.shop_name).replace(/'/g, "\\'")}', ${review.rating})">🗑️ Delete Review</button>
+            <button class="btn-view" onclick="viewOrderDetail('${review.order_number}')" style="padding: 6px 12px;">📋 View Order</button>
+        </div>
+    </div>
+`;
+    });
+    container.innerHTML = html;
+}
+
+// Delete a review
+async function deleteReview(reviewId, shopName, rating) {
+    if (!confirm(`Are you sure you want to delete this review for "${shopName}" (${rating}★)? This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/admin/reviews/${reviewId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            showToast('Review Deleted', `The review has been deleted successfully.`, 'success');
+            // Refresh the reviews list
+            fetchAllReviews();
+        } else {
+            showToast('Error', data.error || 'Could not delete review', 'danger');
+        }
+    } catch (error) {
+        console.error('Error deleting review:', error);
+        showToast('Error', 'Failed to delete review. Please try again.', 'danger');
+    }
+}
+
+// Refresh reviews
+function refreshReviews() {
+    fetchAllReviews();
+    showToast('Refreshed', 'Reviews data has been updated', 'info');
+}
+
+// Add to switchPanel function to load reviews when panel is activated
+const originalSwitchPanel = window.switchPanel;
+window.switchPanel = function(name, el) {
+    if (originalSwitchPanel) originalSwitchPanel(name, el);
+    if (name === 'reviews') {
+        setTimeout(() => {
+            fetchAllReviews();
+        }, 100);
+    }
+};
+
+
+
+</script>
+
+</body>
+</html>

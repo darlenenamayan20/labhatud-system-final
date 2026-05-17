@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Result</title>
+</head>
+<body>
+    <h1>Payment Result</h1>
+ 
+    {% if order.status == "paid" %}
+        <p style="color: green;">Payment successful! Thank you.</p>
+    {% elif order.status == "failed" %}
+        <p style="color: red;">Payment failed. Please try again.</p>
+        <a href="{% url 'checkout' %}">Try Again</a>
+    {% else %}
+        <p style="color: orange;">Payment is pending. Please wait or refresh.</p>
+    {% endif %}
+ 
+    <ul>
+        <li><strong>Order ID:</strong> {{ order.pk }}</li>
+        <li><strong>Description:</strong> {{ order.description }}</li>
+        <li><strong>Amount:</strong> PHP {{ order.amount_in_pesos }}</li>
+        <li><strong>Status:</strong> {{ order.status }}</li>
+    </ul>
+ 
+    <a href="{% url 'checkout' %}">Back to Checkout</a>
+</body>
+</html>

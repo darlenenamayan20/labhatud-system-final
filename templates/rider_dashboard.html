@@ -1,0 +1,2081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LabHatud | Rider Dashboard</title>
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/rider_dashboard.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="rider-id" content="{{ request.user.id }}">
+</head>
+<body>
+
+<!-- TOAST NOTIFICATIONS -->
+<div id="toast-container"></div>
+
+<!-- ── NAVBAR ── -->
+<nav id="mainNav">
+    <a href="{% url 'rider_dashboard' %}" class="nav-logo">
+        <img src="{% static 'images/logo_no_background.png' %}" alt="LabHatud Logo" class="nav-logo-img">
+        <span class="nav-logo-name">LABHATUD</span>
+        <span class="nav-role-chip">RIDER</span>
+    </a>
+
+    <ul class="nav-links">
+        <li><a href="#" class="active" onclick="switchPanel('dashboard',this)">Dashboard</a></li>
+        <li><a href="#" onclick="switchPanel('tasks',this)">My Tasks</a></li>
+        <li><a href="#" onclick="switchPanel('schedule',this)">Schedule</a></li>
+        <li><a href="#" onclick="switchPanel('earnings',this)">Earnings</a></li>
+        <li><a href="#" onclick="switchPanel('history',this)">History</a></li>
+        <li><a href="#" onclick="switchPanel('profile',this)">Profile</a></li>
+    </ul>
+
+    <div class="nav-cta">
+        <div class="avail-toggle available" id="availToggle" onclick="toggleAvailability()">
+            <div class="avail-dot"></div>
+            <span id="availLabel">Available</span>
+        </div>
+
+        <div style="position:relative;">
+            <div class="notif-bell" id="notifBell">🔔
+                <div class="notif-badge" id="notifBadge">{{ unread_count|default:0 }}</div>
+            </div>
+            <div class="notif-panel" id="notifPanel">
+                <div class="notif-panel-header">
+                    <h4>Notifications</h4>
+                    <span class="notif-clear" id="notifClear">Clear all</span>
+                </div>
+                <div id="notifList">
+                    {% if notifications %}
+                        {% for notif in notifications %}
+                        <div class="notif-item unread" data-id="{{ notif.id }}">
+                            <div class="notif-dot"></div>
+                            <div class="notif-item-body">
+                                <div class="notif-item-title">{{ notif.title }}</div>
+                                <div class="notif-item-time">{{ notif.created_at|timesince }} ago</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="notif-empty">No new notifications</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="user-menu">
+            <span class="user-name">{{ request.user.first_name|default:request.user.username }}</span>
+            <div class="user-avatar" id="userAvatar">
+                {% if request.user.first_name %}
+                    {{ request.user.first_name|first|upper }}
+                {% else %}
+                    {{ request.user.username|first|upper }}
+                {% endif %}
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+                <a href="#" onclick="switchPanel('profile');return false;">My Profile</a>
+                <a href="#" onclick="switchPanel('earnings');return false;">My Earnings</a>
+                <a href="{% url 'logout' %}" style="color:var(--danger);font-weight:700;">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+    <a href="#" onclick="switchPanel('dashboard')">Dashboard</a>
+    <a href="#" onclick="switchPanel('tasks')">My Tasks</a>
+    <a href="#" onclick="switchPanel('schedule')">Schedule</a>
+    <a href="#" onclick="switchPanel('earnings')">Earnings</a>
+    <a href="#" onclick="switchPanel('history')">History</a>
+    <a href="#" onclick="switchPanel('profile')">Profile</a>
+    <a href="{% url 'logout' %}" style="color:var(--teal);font-weight:700;">Logout</a>
+</div>
+
+<div class="page-wrapper">
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">Main</div>
+            <div class="sidebar-item active" onclick="switchPanel('dashboard',this)">
+                <span class="sidebar-icon">📊</span> Dashboard
+            </div>
+            <div class="sidebar-item" onclick="switchPanel('tasks',this)">
+                <span class="sidebar-icon">🛵</span> My Tasks
+                <span class="sidebar-badge" id="sideTaskCount">{{ pending_count|default:0 }}</span>
+            </div>
+            <div class="sidebar-item" onclick="switchPanel('schedule',this)">
+                <span class="sidebar-icon">📅</span> Schedule
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">Finance</div>
+            <div class="sidebar-item" onclick="switchPanel('earnings',this)">
+                <span class="sidebar-icon">💰</span> Earnings
+            </div>
+            <div class="sidebar-item" onclick="switchPanel('history',this)">
+                <span class="sidebar-icon">🕐</span> Delivery History
+            </div>
+        </div>
+        <hr class="sidebar-divider">
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">Account</div>
+            <div class="sidebar-item" onclick="switchPanel('profile',this)">
+                <span class="sidebar-icon">👤</span> My Profile
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <!-- DASHBOARD PANEL -->
+        <div class="tab-panel active" id="panel-dashboard">
+            <section class="stats-banner">
+                <div class="stats-banner-content">
+                    <div class="stats-banner-title">Good {{ greeting }}, {{ request.user.first_name|default:request.user.username }}! 🛵</div>
+                    <div class="stats-banner-sub">Stay safe on the road!</div>
+                </div>
+                <div class="stats-grid-banner">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ today_deliveries|default:0 }}</div>
+                        <div class="stat-label">Today's Tasks</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="pendingTasks">{{ pending_count|default:0 }}</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">₱ {{ today_earnings|default:0|floatformat:2 }}</div>
+                        <div class="stat-label">Today's Earnings</div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">New Assignments</div>
+                    <div class="kpi-value" id="newAssignmentsCount">{{ pending_count|default:0 }}</div>
+                    <div class="kpi-sub">Awaiting your acceptance</div>
+                </div>
+                <div class="kpi-card warning">
+                    <div class="kpi-label">Active Deliveries</div>
+                    <div class="kpi-value" id="activeDeliveriesCount">{{ accepted_orders_count|default:0 }}</div>
+                    <div class="kpi-sub">Currently in transit</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-label">Completed Today</div>
+                    <div class="kpi-value">{{ completed_today|default:0 }}</div>
+                    <div class="kpi-sub">Successfully delivered</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Earnings</div>
+                    <div class="kpi-value">₱ {{ total_earnings|default:0|floatformat:0 }}</div>
+                    <div class="kpi-sub">Lifetime</div>
+                </div>
+            </div>
+
+            <!-- NEW ASSIGNMENTS SECTION -->
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">New Assignments</h2>
+                    <div class="section-subtitle">Accept or decline new delivery tasks from shops</div>
+                </div>
+                <a href="#" class="view-all" onclick="switchPanel('tasks');return false;">View All Tasks →</a>
+            </div>
+
+            <div class="tasks-grid" id="dashboardTasksGrid">
+                {% if pending_orders %}
+                    {% for order in pending_orders %}
+                    <div class="task-card" id="task-card-{{ order.id }}">
+                        <div class="task-header">
+                            <span class="task-number">#{{ order.order_number }}</span>
+                            <span class="task-status status-new">New Assignment</span>
+                        </div>
+                        <div class="task-locations">
+                            <div class="location-row">
+                                <span class="loc-icon">🏪</span>
+                                <div>
+                                    <div class="loc-label">Pickup From Shop</div>
+                                    <div class="loc-addr">{{ order.shop.shop_name }}</div>
+                                    <div class="loc-sub">{{ order.shop.address|truncatechars:30 }}</div>
+                                </div>
+                            </div>
+                            <div class="location-row">
+                                <span class="loc-icon">📍</span>
+                                <div>
+                                    <div class="loc-label">Deliver To Customer</div>
+                                    <div class="loc-addr">{{ order.customer.get_full_name|default:order.customer.username }}</div>
+                                    <div class="loc-sub">{{ order.pickup_address|truncatechars:30 }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-meta">
+                            <div class="task-meta-item"><span>⚖️</span> {{ order.weight }}kg {{ order.get_service_type_display }}</div>
+                            <div class="task-meta-item"><span>💰</span> ₱ {{ order.total_amount|floatformat:2 }}</div>
+                            <div class="task-meta-item"><span>💵</span> Earn: ₱ {{ order.total_amount|floatformat:2 }}</div>
+                            <div class="task-meta-item"><span>📞</span> {{ order.customer.phone|default:"N/A" }}</div>
+                        </div>
+                        <div class="task-meta-item"><span>📅</span> Pickup: {{ order.pickup_date|date:"M d, Y" }} at {{ order.pickup_time|time:"g:i A" }}</div>
+                        {% if order.special_instructions %}
+                        <div class="task-note">📝 {{ order.special_instructions|truncatechars:50 }}</div>
+                        {% endif %}
+                        <div class="task-actions">
+                            <button class="btn-accept" data-order-id="{{ order.id }}" onclick="acceptTask(this)">✅ Accept</button>
+                            <button class="btn-decline" onclick="openDeclineModal('{{ order.order_number }}')">✕ Decline</button>
+                            <button class="btn-view" onclick="openTaskDetail('{{ order.order_number }}')">View</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="grid-column: 1/-1; text-align: center; padding: 60px; background: var(--card); border-radius: var(--radius);">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+                        <h3 style="margin-bottom: 8px;">No New Assignments</h3>
+                        <p style="color: var(--text3); font-size: 13px;">Check back later for new delivery tasks.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Replace the DASHBOARD PANEL Active Tasks section with this -->
+
+<!-- ACTIVE TASKS SECTION - Shows orders assigned to this rider -->
+<div class="section-header" style="margin-top:40px;">
+    <div>
+        <h2 class="section-title">Active Tasks</h2>
+        <div class="section-subtitle">Orders assigned to you - update status as you progress</div>
+    </div>
+</div>
+
+<div class="tasks-grid" id="activeTasksGrid">
+    {% if accepted_orders %}
+        {% for order in accepted_orders %}
+        <div class="task-card" id="active-task-card-{{ order.id }}">
+            <div class="task-header">
+                <span class="task-number">#{{ order.order_number }}</span>
+                <span class="task-status 
+                    {% if order.status == 'ready' %}status-ready
+                    {% elif order.status == 'accepted' %}status-pending
+                    {% elif order.status == 'rider_accepted' %}status-pickup
+                    {% elif order.status == 'picked_up' %}status-pickup
+                    {% elif order.status == 'out_for_delivery' %}status-delivering
+                    {% endif %}">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+            <div class="task-locations">
+                <div class="location-row">
+                    <span class="loc-icon">🏪</span>
+                    <div>
+                        <div class="loc-label">Pickup From Shop</div>
+                        <div class="loc-addr">{{ order.shop.shop_name }}</div>
+                        <div class="loc-sub">{{ order.shop.address|truncatechars:25 }}</div>
+                    </div>
+                </div>
+                <div class="location-row">
+                    <span class="loc-icon">📍</span>
+                    <div>
+                        <div class="loc-label">Deliver To Customer</div>
+                        <div class="loc-addr">{{ order.customer.get_full_name|default:order.customer.username }}</div>
+                        <div class="loc-sub">{{ order.pickup_address|truncatechars:25 }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Steps -->
+            <div class="progress-steps">
+                <div class="step completed">Assigned</div>
+                <div class="step {% if order.status == 'picked_up' or order.status == 'out_for_delivery' %}completed{% elif order.status == 'rider_accepted' %}active{% endif %}">
+                    Picked Up
+                </div>
+                <div class="step {% if order.status == 'out_for_delivery' %}completed{% elif order.status == 'picked_up' %}active{% endif %}">
+                    Out for Delivery
+                </div>
+                <div class="step {% if order.status == 'delivered' %}completed{% endif %}">
+                    Delivered
+                </div>
+            </div>
+            
+            <div class="task-meta">
+                <div class="task-meta-item"><span>⚖️</span> {{ order.weight }}kg {{ order.get_service_type_display }}</div>
+                <div class="task-meta-item"><span>💰</span> ₱ {{ order.total_amount|floatformat:2 }}</div>
+                <div class="task-meta-item"><span>📞</span> {{ order.customer.phone|default:"N/A" }}</div>
+                <div class="task-meta-item"><span>📅</span> {{ order.pickup_date|date:"M d" }} at {{ order.pickup_time|time:"g:i A" }}</div>
+            </div>
+            
+            <!-- ========== ACTION BUTTONS FIXED ========== -->
+            <div class="task-actions">
+                {% if order.status == 'ready' %}
+                    <!-- READY ORDER - Show Out for Delivery button directly -->
+                    <button class="btn-out-for-delivery" onclick="markAsOutForDelivery('{{ order.order_number }}')" style="flex:1; padding: 10px; background: #1a6b5a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        🚚 Mark as Out for Delivery
+                    </button>
+                {% elif order.status == 'accepted' %}
+                    <!-- ACCEPTED ORDER - Show Accept button -->
+                    <button class="btn-accept" data-order-id="{{ order.id }}" onclick="acceptTask(this)" style="flex:1; padding: 10px; background: #22c97a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        ✅ Accept Task
+                    </button>
+                {% elif order.status == 'rider_accepted' %}
+                    <button class="btn-update" onclick="quickUpdateStatus('{{ order.order_number }}', 'picked_up')" style="flex:1; padding: 10px; background: #f5a623; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        📥 Mark as Picked Up
+                    </button>
+                {% elif order.status == 'picked_up' %}
+                    <button class="btn-update" onclick="quickUpdateStatus('{{ order.order_number }}', 'out_for_delivery')" style="flex:1; padding: 10px; background: #1a6b5a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        🚚 Mark as Out for Delivery
+                    </button>
+                {% elif order.status == 'out_for_delivery' %}
+                    <button class="btn-update" onclick="quickUpdateStatus('{{ order.order_number }}', 'delivered')" style="flex:1; padding: 10px; background: #22c97a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        ✅ Mark as Delivered
+                    </button>
+                {% endif %}
+                <button class="btn-view" onclick="openTaskDetail('{{ order.order_number }}')">View Details</button>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: var(--card); border-radius: var(--radius);">
+            <div style="font-size: 36px; margin-bottom: 12px;">📋</div>
+            <h4 style="margin-bottom: 4px;">No Active Tasks</h4>
+            <p style="color: var(--text3); font-size: 12px;">When orders are assigned to you, they will appear here.</p>
+        </div>
+    {% endif %}
+</div>
+        </div>
+
+       <!-- PANEL: MY TASKS - COMPLETELY FIXED -->
+<div class="tab-panel" id="panel-tasks">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">My Tasks</h2>
+            <div class="section-subtitle">All your assigned deliveries</div>
+        </div>
+    </div>
+    <div class="order-filter-tabs">
+        <div class="filter-tab active" data-status="all" onclick="filterTasks('all', this)">All <span class="tab-count">{{ all_orders|length }}</span></div>
+        <div class="filter-tab" data-status="new" onclick="filterTasks('new', this)">New <span class="tab-count">{{ pending_orders|length }}</span></div>
+        <div class="filter-tab" data-status="active" onclick="filterTasks('active', this)">Active <span class="tab-count">{{ accepted_orders|length }}</span></div>
+        <div class="filter-tab" data-status="completed" onclick="filterTasks('completed', this)">Completed <span class="tab-count">{{ completed_deliveries|length }}</span></div>
+    </div>
+    
+    <div class="tasks-grid" id="allTasksGrid">
+        <!-- Show ALL orders properly -->
+        {% for order in all_orders %}
+            {% if order.status == 'accepted' %}
+                <!-- NEW: Waiting for rider acceptance -->
+                <div class="task-card" data-status="new">
+                    <div class="task-header">
+                        <span class="task-number">#{{ order.order_number }}</span>
+                        <span class="task-status status-new">New Assignment</span>
+                    </div>
+                    <div class="task-locations">
+                        <div class="location-row">
+                            <span class="loc-icon">🏪</span>
+                            <div>
+                                <div class="loc-label">From Shop</div>
+                                <div class="loc-addr">{{ order.shop.shop_name }}</div>
+                                <div class="loc-sub">{{ order.pickup_date|date:"M d, Y" }} at {{ order.pickup_time|time:"g:i A" }}</div>
+                            </div>
+                        </div>
+                        <div class="location-row">
+                            <span class="loc-icon">📍</span>
+                            <div>
+                                <div class="loc-label">To Customer</div>
+                                <div class="loc-addr">{{ order.customer.get_full_name|default:order.customer.username }}</div>
+                                <div class="loc-sub">{{ order.pickup_address|truncatechars:25 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="task-meta">
+                        <div class="task-meta-item"><span>⚖️</span> {{ order.weight }}kg {{ order.get_service_type_display }}</div>
+                        <div class="task-meta-item"><span>💰</span> ₱ {{ order.total_amount|floatformat:2 }}</div>
+                        <div class="task-meta-item"><span>💵</span> Earn: ₱ {{ order.total_amount|floatformat:2 }}</div>
+                        <div class="task-meta-item"><span>📞</span> {{ order.customer.phone|default:"N/A" }}</div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-accept" data-order-id="{{ order.id }}" onclick="acceptTask(this)">✅ Accept</button>
+                        <button class="btn-decline" onclick="openDeclineModal('{{ order.order_number }}')">✕ Decline</button>
+                        <button class="btn-view" onclick="openTaskDetail('{{ order.order_number }}')">View</button>
+                    </div>
+                </div>
+            {% elif order.status == 'rider_accepted' or order.status == 'picked_up' or order.status == 'out_for_delivery' %}
+                <!-- ACTIVE: Rider is handling the delivery -->
+                <div class="task-card" data-status="active">
+                    <div class="task-header">
+                        <span class="task-number">#{{ order.order_number }}</span>
+                        <span class="task-status status-delivering">{{ order.get_status_display }}</span>
+                    </div>
+                    <div class="task-locations">
+                        <div class="location-row">
+                            <span class="loc-icon">🏪</span>
+                            <div>
+                                <div class="loc-label">From Shop</div>
+                                <div class="loc-addr">{{ order.shop.shop_name }}</div>
+                                <div class="loc-sub">{{ order.shop.address|truncatechars:25 }}</div>
+                            </div>
+                        </div>
+                        <div class="location-row">
+                            <span class="loc-icon">📍</span>
+                            <div>
+                                <div class="loc-label">To Customer</div>
+                                <div class="loc-addr">{{ order.customer.get_full_name|default:order.customer.username }}</div>
+                                <div class="loc-sub">{{ order.pickup_address|truncatechars:25 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-steps">
+                        <div class="step completed">Assigned</div>
+                        <div class="step {% if order.status == 'picked_up' or order.status == 'out_for_delivery' %}completed{% elif order.status == 'rider_accepted' %}active{% endif %}">Picked Up</div>
+                        <div class="step {% if order.status == 'out_for_delivery' %}active{% endif %}">En Route</div>
+                        <div class="step">Delivered</div>
+                    </div>
+                    <div class="task-meta">
+                        <div class="task-meta-item"><span>⚖️</span> {{ order.weight }}kg {{ order.get_service_type_display }}</div>
+                        <div class="task-meta-item"><span>💰</span> ₱ {{ order.total_amount|floatformat:2 }}</div>
+                        <div class="task-meta-item"><span>📞</span> {{ order.customer.phone|default:"N/A" }}</div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-update" onclick="openUpdateStatus('{{ order.order_number }}')">📦 Update Status</button>
+                        <button class="btn-view" onclick="openTaskDetail('{{ order.order_number }}')">View</button>
+                    </div>
+                </div>
+            {% elif order.status == 'delivered' %}
+                <!-- COMPLETED: Successfully delivered -->
+                <div class="task-card" data-status="completed">
+                    <div class="task-header">
+                        <span class="task-number">#{{ order.order_number }}</span>
+                        <span class="task-status status-done">Delivered</span>
+                    </div>
+                    <div class="task-locations">
+                        <div class="location-row">
+                            <span class="loc-icon">🏪</span>
+                            <div>
+                                <div class="loc-label">From Shop</div>
+                                <div class="loc-addr">{{ order.shop.shop_name }}</div>
+                            </div>
+                        </div>
+                        <div class="location-row">
+                            <span class="loc-icon">📍</span>
+                            <div>
+                                <div class="loc-label">To Customer</div>
+                                <div class="loc-addr">{{ order.customer.get_full_name|default:order.customer.username }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="task-meta">
+                        <div class="task-meta-item"><span>⚖️</span> {{ order.weight }}kg</div>
+                        <div class="task-meta-item"><span>💰</span> ₱ {{ order.total_amount|floatformat:2 }}</div>
+                    </div>
+                    {% if order.delivered_at %}
+                    <div class="task-meta-item"><span>✅</span> Delivered: {{ order.delivered_at|date:"M d, Y g:i A" }}</div>
+                    {% endif %}
+                    <div class="task-actions">
+                        <button class="btn-view" onclick="openTaskDetail('{{ order.order_number }}')">View</button>
+                    </div>
+                </div>
+            {% else %}
+                <!-- OTHER STATUSES (for debugging) -->
+                <div class="task-card" data-status="new">
+                    <div class="task-header">
+                        <span class="task-number">#{{ order.order_number }}</span>
+                        <span class="task-status status-new">{{ order.get_status_display }}</span>
+                    </div>
+                    <div class="task-locations">
+                        <div class="location-row">
+                            <span class="loc-icon">🏪</span>
+                            <div>
+                                <div class="loc-label">From Shop</div>
+                                <div class="loc-addr">{{ order.shop.shop_name }}</div>
+                            </div>
+                        </div>
+                        <div class="location-row">
+                            <span class="loc-icon">📍</span>
+                            <div>
+                                <div class="loc-label">To Customer</div>
+                                <div class="loc-addr">{{ order.customer.get_full_name|default:order.customer.username }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="task-meta">
+                        <div class="task-meta-item"><span>⚖️</span> {{ order.weight }}kg</div>
+                        <div class="task-meta-item"><span>💰</span> ₱ {{ order.total_amount|floatformat:2 }}</div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-view" onclick="openTaskDetail('{{ order.order_number }}')">View</button>
+                    </div>
+                </div>
+            {% endif %}
+        {% empty %}
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px; background: var(--card); border-radius: var(--radius);">
+                <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+                <h3 style="margin-bottom: 8px;">No Tasks Found</h3>
+                <p style="color: var(--text3);">You don't have any orders assigned yet.</p>
+                <p style="color: var(--text3); font-size: 12px; margin-top: 8px;">Orders will appear here when shops assign them to you.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+        <!-- PANEL: SCHEDULE -->
+        <div class="tab-panel" id="panel-schedule">
+            <div class="section-header">
+                <h2 class="section-title">My Schedule</h2>
+                <div class="section-subtitle">Upcoming delivery tasks</div>
+            </div>
+            <div class="schedule-list" id="scheduleList">
+                {% if schedule_orders %}
+                    {% for order in schedule_orders %}
+                    <div class="schedule-day">
+                        <div class="schedule-day-header">
+                            <span class="schedule-day-label">{{ order.pickup_date|date:"l, F d, Y" }}</span>
+                            <span class="schedule-count">{{ order.pickup_time|time:"g:i A" }}</span>
+                        </div>
+                        <div class="schedule-slot">
+                            <div class="slot-time">{{ order.pickup_time|time:"g:i A" }}</div>
+                            <div class="slot-info">
+                                <div class="slot-order">#{{ order.order_number }} - {{ order.shop.shop_name }}</div>
+                                <div class="slot-address">Deliver to: {{ order.customer.get_full_name|default:order.customer.username }}</div>
+                                <div class="slot-address">{{ order.pickup_address|truncatechars:50 }}</div>
+                            </div>
+                            <span class="slot-badge slot-pickup">Pending</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 60px; background: var(--card); border-radius: var(--radius);">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
+                        <h3 style="margin-bottom: 8px;">No Upcoming Deliveries</h3>
+                        <p style="color: var(--text3);">Your schedule is clear. Accept new tasks to see them here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- COMPLETE FIXED RIDER_DASHBOARD.HTML - EARNINGS PANEL SECTION -->
+<!-- Replace the entire earnings panel with this fixed version -->
+
+<!-- PANEL: EARNINGS - JAVASCRIPT BASED CHART -->
+<div class="tab-panel" id="panel-earnings">
+    <div class="section-header">
+        <h2 class="section-title">My Earnings</h2>
+        <div class="section-subtitle">Track your delivery income</div>
+    </div>
+    
+    <div class="earnings-summary">
+        <div class="earnings-title">Total Lifetime Earnings</div>
+        <div class="earnings-amount">₱ {{ total_earnings|floatformat:2 }}</div>
+        <div class="earnings-sub">Keep up the great work! 🎉</div>
+        <div class="earnings-breakdown">
+            <div class="earn-item">
+                <div class="earn-label">This Week</div>
+                <div class="earn-val">₱ {{ weekly_earnings|floatformat:2 }}</div>
+            </div>
+            <div class="earn-item">
+                <div class="earn-label">This Month</div>
+                <div class="earn-val">₱ {{ monthly_earnings|floatformat:2 }}</div>
+            </div>
+            <div class="earn-item">
+                <div class="earn-label">Total Deliveries</div>
+                <div class="earn-val">{{ total_deliveries_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="analytics-grid">
+        <div class="chart-card">
+            <div class="chart-title">Weekly Earnings</div>
+            <div class="chart-sub">Last 7 days</div>
+            <div id="earningsChart" style="height: 180px; margin-top: 20px;"></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">Performance Metrics</div>
+            <div class="chart-sub">Your delivery statistics</div>
+            <div class="metric-list">
+                <div class="metric-row">
+                    <span class="metric-label">🎯 Completion Rate</span>
+                    <span class="metric-value">{{ completion_rate }}%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">⭐ Average Rating</span>
+                    <span class="metric-value">{{ avg_rating }} ★</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">📦 Total Deliveries</span>
+                    <span class="metric-value">{{ total_deliveries_count }}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">🕐 Avg Delivery Time</span>
+                    <span class="metric-value">{{ avg_delivery_time }} min</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden script tag to store chart data - place this after the earnings panel -->
+<script id="earnings-chart-data" type="application/json">
+{{ weekly_chart_json|safe }}
+</script>
+
+        <!-- PANEL: DELIVERY HISTORY -->
+        <div class="tab-panel" id="panel-history">
+            <div class="section-header">
+                <h2 class="section-title">Delivery History</h2>
+                <div class="section-subtitle">All your completed deliveries</div>
+            </div>
+            <div class="toolbar">
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text" id="historySearch" placeholder="Search by order # or customer name..." onkeyup="searchHistory()">
+                </div>
+                <select class="toolbar-select" id="sortHistory" onchange="sortHistory()">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                </select>
+            </div>
+            <div class="history-table-container">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Shop</th>
+                            <th>Customer</th>
+                            <th>Fee</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        {% for order in completed_deliveries %}
+                        <tr class="history-row" data-order-number="{{ order.order_number }}" data-customer="{{ order.customer.get_full_name|default:order.customer.username }}" data-date="{{ order.delivered_at|date:'Y-m-d' }}">
+                            <td>{{ order.order_number }}</td>
+                            <td>{{ order.delivered_at|date:"M d, Y" }}</td>
+                            <td>{{ order.shop.shop_name }}</td>
+                            <td>{{ order.customer.get_full_name|default:order.customer.username }}</td>
+                            <td>₱ {{ order.total_amount|floatformat:2 }}</td>
+                            <td><span class="badge-delivered">Delivered</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" style="text-align:center; padding: 40px;">No completed deliveries yet</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PANEL: MY PROFILE -->
+        <div class="tab-panel" id="panel-profile">
+            <div class="section-header">
+                <h2 class="section-title">My Profile</h2>
+                <div class="section-subtitle">Manage your personal information</div>
+            </div>
+            
+            <div class="profile-hero">
+                <div class="profile-avatar-lg">
+                    {% if request.user.first_name %}
+                        {{ request.user.first_name|first|upper }}
+                    {% else %}
+                        {{ request.user.username|first|upper }}
+                    {% endif %}
+                </div>
+                <div class="profile-info">
+                    <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                    <div class="profile-role">Delivery Rider</div>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <div class="profile-stat-num">{{ total_deliveries_count|default:0 }}</div>
+                            <div class="profile-stat-lbl">Deliveries</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-num">{{ completion_rate|default:100 }}%</div>
+                            <div class="profile-stat-lbl">Completion</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-num">{{ avg_rating|default:4.9 }}★</div>
+                            <div class="profile-stat-lbl">Rating</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <div class="settings-card-title">👤 Personal Information</div>
+                    <div class="settings-card-desc">Update your personal details</div>
+                    <form id="profileForm" method="post" action="{% url 'update_rider_profile' %}">
+                        {% csrf_token %}
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>First Name</label>
+                                <input type="text" name="first_name" value="{{ request.user.first_name }}" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Last Name</label>
+                                <input type="text" name="last_name" value="{{ request.user.last_name }}" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Email Address</label>
+                            <input type="email" name="email" value="{{ request.user.email }}" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Phone Number</label>
+                            <input type="text" name="phone" value="{{ request.user.phone }}">
+                        </div>
+                        <div class="input-group">
+                            <label>Address</label>
+                            <textarea name="address" rows="2">{{ request.user.address }}</textarea>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width:100%;">Save Changes</button>
+                    </form>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-card-title">🛵 Vehicle Information</div>
+                    <div class="settings-card-desc">Update your vehicle details</div>
+                    <form id="vehicleForm" method="post" action="{% url 'update_rider_vehicle' %}">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <label>Vehicle Type</label>
+                            <select name="vehicle_type">
+                                <option value="Motorcycle" {% if request.user.vehicle_type == 'Motorcycle' %}selected{% endif %}>Motorcycle</option>
+                                <option value="Scooter" {% if request.user.vehicle_type == 'Scooter' %}selected{% endif %}>Scooter</option>
+                                <option value="Bicycle" {% if request.user.vehicle_type == 'Bicycle' %}selected{% endif %}>Bicycle</option>
+                                <option value="Car" {% if request.user.vehicle_type == 'Car' %}selected{% endif %}>Car</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Vehicle Model</label>
+                            <input type="text" name="vehicle_model" value="{{ request.user.vehicle_model|default:'' }}" placeholder="e.g., Honda Click 125i">
+                        </div>
+                        <div class="input-group">
+                            <label>Plate Number</label>
+                            <input type="text" name="plate_number" value="{{ request.user.plate_number|default:'' }}" placeholder="e.g., ABC-1234">
+                        </div>
+                        <button type="submit" class="btn-primary" style="width:100%;">Save Vehicle Info</button>
+                    </form>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-card-title">🔔 Notification Settings</div>
+                    <div class="settings-card-desc">Manage how you receive notifications</div>
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">Email Notifications</div>
+                            <div class="toggle-sub">Receive email updates for new tasks</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="emailNotifToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">SMS Notifications</div>
+                            <div class="toggle-sub">Get text messages for urgent updates</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="smsNotifToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">Availability Status</div>
+                            <div class="toggle-sub">Show yourself available for new tasks</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="availabilityToggle" checked onchange="toggleAvailabilityFromProfile(this)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-bottom">
+            <p class="footer-copy">© 2025 LabHatud. Rider Dashboard · All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="taskDetailModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="detailTaskNum">Order Details</div>
+            <button class="modal-close" onclick="closeModal('taskDetailModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="taskDetailContent"></div>
+            <div class="modal-actions" id="taskDetailActions"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="updateStatusModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Update Task Status</div>
+            <button class="modal-close" onclick="closeModal('updateStatusModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom: 16px;">Select your current progress:</p>
+            <div class="status-options">
+                <div class="status-option" onclick="selectRiderStatus(this, 'picked_up')">
+                    <div class="status-icon">📥</div>
+                    <div class="status-info">
+                        <div class="status-text">Picked Up</div>
+                        <div class="status-desc">Collected from shop</div>
+                    </div>
+                    <div class="status-check">✓</div>
+                </div>
+                <div class="status-option" onclick="selectRiderStatus(this, 'out_for_delivery')">
+                    <div class="status-icon">🚚</div>
+                    <div class="status-info">
+                        <div class="status-text">Out for Delivery</div>
+                        <div class="status-desc">En route to customer</div>
+                    </div>
+                    <div class="status-check">✓</div>
+                </div>
+                <div class="status-option" onclick="selectRiderStatus(this, 'delivered')">
+                    <div class="status-icon">✅</div>
+                    <div class="status-info">
+                        <div class="status-text">Delivered</div>
+                        <div class="status-desc">Successfully delivered</div>
+                    </div>
+                    <div class="status-check">✓</div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-primary" id="confirmStatusBtn" onclick="confirmRiderStatusUpdate()">Confirm Update</button>
+                <button class="btn-secondary" onclick="closeModal('updateStatusModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="declineModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Decline Task</div>
+            <button class="modal-close" onclick="closeModal('declineModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <p>Select a reason for declining:</p>
+            <div class="decline-reasons">
+                <div class="reason-option" onclick="selectDeclineReason(this)">🚫 Not available at that time</div>
+                <div class="reason-option" onclick="selectDeclineReason(this)">📍 Location is outside my range</div>
+                <div class="reason-option" onclick="selectDeclineReason(this)">🛵 Vehicle issue</div>
+                <div class="reason-option" onclick="selectDeclineReason(this)">📦 Already at full capacity</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-danger" onclick="confirmDecline()">Decline Task</button>
+                <button class="btn-secondary" onclick="closeModal('declineModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// CSRF Token helper
+function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+}
+
+const csrftoken = getCSRFToken();
+
+// Global variables
+let riderAvailable = true;
+let currentUpdateOrderNumber = null;
+let selectedRiderStatusEl = null;
+let selectedDeclineReasonEl = null;
+let currentDeclineOrderNumber = null;
+
+// Get greeting
+const hour = new Date().getHours();
+const greeting = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+
+// Toast function
+function showToast(title, msg, type = 'success') {
+    const icons = { success:'✅', warning:'⚠️', info:'ℹ️', danger:'❌' };
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-icon">${icons[type] || '🔔'}</div>
+        <div class="toast-body">
+            <div class="toast-title">${title}</div>
+            <div class="toast-msg">${msg}</div>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        <div class="toast-progress"></div>
+    `;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 4600);
+}
+
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.remove('open');
+}
+
+function switchPanel(name, el) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    const panel = document.getElementById('panel-' + name);
+    if (panel) panel.classList.add('active');
+    
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    if (el && el.tagName === 'A') el.classList.add('active');
+    
+    document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+    if (el && el.parentElement && el.parentElement.classList) {
+        const sidebarItem = document.querySelector(`.sidebar-item[onclick*="${name}"]`);
+        if (sidebarItem) sidebarItem.classList.add('active');
+    }
+    
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileMenu) mobileMenu.classList.remove('open');
+}
+
+// Availability Toggle
+function toggleAvailability() {
+    riderAvailable = !riderAvailable;
+    const tog = document.getElementById('availToggle');
+    const lbl = document.getElementById('availLabel');
+    if (riderAvailable) {
+        tog.className = 'avail-toggle available';
+        lbl.textContent = 'Available';
+        showToast('Now Available ✅', 'You are now accepting new delivery assignments.', 'success');
+    } else {
+        tog.className = 'avail-toggle unavailable';
+        lbl.textContent = 'Unavailable';
+        showToast('Gone Unavailable 🚫', 'You will not receive new assignments.', 'warning');
+    }
+}
+
+function toggleAvailabilityFromProfile(checkbox) {
+    riderAvailable = checkbox.checked;
+    const tog = document.getElementById('availToggle');
+    const lbl = document.getElementById('availLabel');
+    if (tog && lbl) {
+        if (riderAvailable) {
+            tog.className = 'avail-toggle available';
+            lbl.textContent = 'Available';
+        } else {
+            tog.className = 'avail-toggle unavailable';
+            lbl.textContent = 'Unavailable';
+        }
+    }
+}
+
+// Accept Task
+async function acceptTask(button) {
+    const orderId = button.getAttribute('data-order-id');
+    if (!orderId) {
+        showToast('Error', 'Invalid order ID', 'danger');
+        return;
+    }
+    
+    button.disabled = true;
+    button.textContent = 'Processing...';
+    
+    try {
+        const response = await fetch(`/api/rider/order/accept/${orderId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showToast('Task Accepted ✅', result.message, 'success');
+            // Remove from New Assignments section
+            const taskCard = document.getElementById('task-card-' + orderId);
+            if (taskCard) {
+                taskCard.style.opacity = '0';
+                taskCard.style.transform = 'translateX(20px)';
+                setTimeout(() => taskCard.remove(), 300);
+            }
+            updateBadgeCounts();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast('Accept Failed', result.message || 'Could not accept this order.', 'danger');
+            button.disabled = false;
+            button.textContent = '✅ Accept';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error', 'Failed to accept task. Please try again.', 'danger');
+        button.disabled = false;
+        button.textContent = '✅ Accept';
+    }
+}
+
+// Update badge counts - Fixed to show correct counts
+function updateBadgeCounts() {
+    // New assignments count (orders with status 'accepted' waiting for rider)
+    const newCards = document.querySelectorAll('#allTasksGrid .task-card[data-status="new"]');
+    const newCount = newCards.length;
+    
+    // Active deliveries count (orders accepted by rider, picked up, or out for delivery)
+    const activeCards = document.querySelectorAll('#allTasksGrid .task-card[data-status="active"]');
+    const activeCount = activeCards.length;
+    
+    // Update sidebar badge
+    const sideBadge = document.getElementById('sideTaskCount');
+    if (sideBadge) sideBadge.textContent = newCount;
+    
+    // Update pending tasks display on dashboard
+    const pendingTasks = document.getElementById('pendingTasks');
+    if (pendingTasks) pendingTasks.textContent = newCount;
+    
+    // Update new assignments count on dashboard
+    const newAssignments = document.getElementById('newAssignmentsCount');
+    if (newAssignments) newAssignments.textContent = newCount;
+    
+    // Update active deliveries count on dashboard
+    const activeDeliveries = document.getElementById('activeDeliveriesCount');
+    if (activeDeliveries) activeDeliveries.textContent = activeCount;
+}
+
+// Open Task Detail
+async function openTaskDetail(orderNum) {
+    try {
+        const response = await fetch(`/api/rider/order/${orderNum}/details/`);
+        const data = await response.json();
+        
+        document.getElementById('detailTaskNum').textContent = 'Order #' + orderNum;
+        
+        if (data.success && data.order) {
+            const order = data.order;
+            document.getElementById('taskDetailContent').innerHTML = `
+                <div class="modal-detail-row"><strong>👤 Customer:</strong> ${escapeHtml(order.customer_name)}</div>
+                <div class="modal-detail-row"><strong>📞 Phone:</strong> ${escapeHtml(order.customer_phone)}</div>
+                <div class="modal-detail-row"><strong>🏪 Shop:</strong> ${escapeHtml(order.shop_name)}</div>
+                <div class="modal-detail-row"><strong>📍 Delivery Address:</strong> ${escapeHtml(order.pickup_address)}</div>
+                <div class="modal-detail-row"><strong>⚖️ Weight:</strong> ${order.weight} kg</div>
+                <div class="modal-detail-row"><strong>💰 Total:</strong> ₱ ${order.total_amount}</div>
+                <div class="modal-detail-row"><strong>📊 Status:</strong> ${escapeHtml(order.status_display)}</div>
+                ${order.special_instructions ? `<div class="modal-detail-row"><strong>📝 Note:</strong> ${escapeHtml(order.special_instructions)}</div>` : ''}
+            `;
+            document.getElementById('taskDetailActions').innerHTML = `<button class="btn-secondary" onclick="closeModal('taskDetailModal')">Close</button>`;
+        } else {
+            document.getElementById('taskDetailContent').innerHTML = '<p>Order details not found.</p>';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('taskDetailContent').innerHTML = '<p>Failed to load order details.</p>';
+    }
+    document.getElementById('taskDetailModal').classList.add('open');
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    if (!text) return 'N/A';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Update Status Functions
+function openUpdateStatus(orderNumber) {
+    currentUpdateOrderNumber = orderNumber;
+    selectedRiderStatusEl = null;
+    document.querySelectorAll('#updateStatusModal .status-option').forEach(opt => opt.classList.remove('selected'));
+    
+    const confirmBtn = document.getElementById('confirmStatusBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Confirm Update';
+    }
+    
+    document.getElementById('updateStatusModal').classList.add('open');
+}
+
+function selectRiderStatus(element, status) {
+    document.querySelectorAll('#updateStatusModal .status-option').forEach(opt => opt.classList.remove('selected'));
+    element.classList.add('selected');
+    selectedRiderStatusEl = element;
+    selectedRiderStatusEl.dataset.status = status;
+}
+
+async function confirmRiderStatusUpdate() {
+    if (!selectedRiderStatusEl) {
+        showToast('Select Status', 'Please select a status before confirming.', 'warning');
+        return;
+    }
+    
+    const newStatus = selectedRiderStatusEl.dataset.status;
+    const confirmBtn = document.getElementById('confirmStatusBtn');
+    
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Updating...';
+    }
+    
+    closeModal('updateStatusModal');
+    
+    try {
+        const response = await fetch(`/api/rider/order/${currentUpdateOrderNumber}/update-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const statusMessages = {
+                'picked_up': 'Picked Up 📥',
+                'out_for_delivery': 'Out for Delivery 🚚',
+                'delivered': 'Delivered ✅'
+            };
+            showToast('Status Updated ✅', `Order status updated to ${statusMessages[newStatus] || newStatus}`, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast('Error', data.message || 'Failed to update status', 'danger');
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Confirm Update';
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error', 'Failed to update status', 'danger');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Confirm Update';
+        }
+    }
+}
+
+// Decline Functions
+function openDeclineModal(orderNumber) {
+    currentDeclineOrderNumber = orderNumber;
+    selectedDeclineReasonEl = null;
+    document.querySelectorAll('#declineModal .reason-option').forEach(opt => opt.classList.remove('selected'));
+    document.getElementById('declineModal').classList.add('open');
+}
+
+function selectDeclineReason(element) {
+    document.querySelectorAll('#declineModal .reason-option').forEach(opt => opt.classList.remove('selected'));
+    element.classList.add('selected');
+    selectedDeclineReasonEl = element;
+}
+
+function confirmDecline() {
+    if (!selectedDeclineReasonEl) {
+        showToast('Select Reason', 'Please select a reason for declining.', 'warning');
+        return;
+    }
+    const reason = selectedDeclineReasonEl.textContent.trim();
+    closeModal('declineModal');
+    showToast('Task Declined', `Order #${currentDeclineOrderNumber} was declined. Reason: ${reason}`, 'danger');
+}
+
+// Filter tasks function - Updated to handle 'active' status properly
+function filterTasks(status, element) {
+    const allTabs = document.querySelectorAll('#panel-tasks .filter-tab');
+    allTabs.forEach(tab => tab.classList.remove('active'));
+    if (element) element.classList.add('active');
+    
+    const allCards = document.querySelectorAll('#allTasksGrid .task-card');
+    let visibleCount = 0;
+    allCards.forEach(card => {
+        const cardStatus = card.getAttribute('data-status');
+        if (status === 'all' || cardStatus === status) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// History functions
+function searchHistory() {
+    const searchTerm = document.getElementById('historySearch').value.toLowerCase();
+    const rows = document.querySelectorAll('#historyTableBody .history-row');
+    rows.forEach(row => {
+        const orderNum = (row.getAttribute('data-order-number') || '').toLowerCase();
+        const customer = (row.getAttribute('data-customer') || '').toLowerCase();
+        if (orderNum.includes(searchTerm) || customer.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function sortHistory() {
+    const sortBy = document.getElementById('sortHistory').value;
+    const tbody = document.getElementById('historyTableBody');
+    const rows = Array.from(tbody.querySelectorAll('.history-row'));
+    
+    rows.sort((a, b) => {
+        const dateA = new Date(a.getAttribute('data-date') || '');
+        const dateB = new Date(b.getAttribute('data-date') || '');
+        return sortBy === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+    
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const bannerTitle = document.querySelector('.stats-banner-title');
+    if (bannerTitle) {
+        const userName = '{{ request.user.first_name|default:request.user.username }}';
+        bannerTitle.textContent = `Good ${greeting}, ${userName}! 🛵`;
+    }
+    
+    const filterTabs = document.querySelectorAll('#panel-tasks .filter-tab');
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const status = this.getAttribute('data-status') || 'all';
+            filterTasks(status, this);
+        });
+    });
+});
+
+window.addEventListener('scroll', () => {
+    const nav = document.getElementById('mainNav');
+    if (nav) nav.classList.toggle('scrolled', window.scrollY > 40);
+});
+
+const hamburger = document.getElementById('hamburger');
+if (hamburger) {
+    hamburger.addEventListener('click', () => {
+        const mobileMenu = document.getElementById('mobileMenu');
+        if (mobileMenu) mobileMenu.classList.toggle('open');
+    });
+}
+
+const userAvatar = document.getElementById('userAvatar');
+if (userAvatar) {
+    userAvatar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dropdown = document.getElementById('dropdownMenu');
+        if (dropdown) dropdown.classList.toggle('show');
+    });
+}
+
+const notifBell = document.getElementById('notifBell');
+if (notifBell) {
+    notifBell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const panel = document.getElementById('notifPanel');
+        if (panel) panel.classList.toggle('open');
+    });
+}
+
+const notifClear = document.getElementById('notifClear');
+if (notifClear) {
+    notifClear.addEventListener('click', async () => {
+        try {
+            const response = await fetch('/api/notifications/clear/', {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': csrftoken }
+            });
+            if (response.ok) {
+                const notifList = document.getElementById('notifList');
+                if (notifList) notifList.innerHTML = '<div class="notif-empty">No new notifications</div>';
+                const badge = document.getElementById('notifBadge');
+                if (badge) badge.style.display = 'none';
+                showToast('Cleared', 'All notifications cleared', 'info');
+            }
+        } catch (error) {
+            console.error('Error clearing notifications:', error);
+        }
+    });
+}
+
+window.addEventListener('click', () => {
+    const dropdown = document.getElementById('dropdownMenu');
+    const notifPanel = document.getElementById('notifPanel');
+    if (dropdown) dropdown.classList.remove('show');
+    if (notifPanel) notifPanel.classList.remove('open');
+});
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('open');
+    });
+});
+
+// Render earnings chart
+function renderEarningsChart() {
+    const container = document.getElementById('earningsChart');
+    
+    if (!container) return;
+    
+    // Get chart data from script tag
+    let chartData = [];
+    const scriptTag = document.getElementById('earnings-chart-data');
+    
+    if (scriptTag && scriptTag.textContent && scriptTag.textContent.trim()) {
+        try {
+            const jsonText = scriptTag.textContent.trim();
+            chartData = JSON.parse(jsonText);
+        } catch(e) {
+            console.error('Error parsing chart data:', e);
+            console.log('Raw data:', scriptTag.textContent);
+            chartData = [];
+        }
+    }
+    
+    if (!chartData || chartData.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text3);">No earning data available</div>';
+        return;
+    }
+    
+    // Find max value for scaling
+    let maxValue = 1;
+    for (let i = 0; i < chartData.length; i++) {
+        if (chartData[i].amount > maxValue) {
+            maxValue = chartData[i].amount;
+        }
+    }
+    
+    // Create chart HTML
+    let chartHtml = '<div style="display: flex; gap: 12px; align-items: flex-end; height: 100%;">';
+    
+    for (let i = 0; i < chartData.length; i++) {
+        const item = chartData[i];
+        let heightPercent = 5;
+        if (maxValue > 0) {
+            heightPercent = (item.amount / maxValue) * 100;
+        }
+        const barHeight = Math.max(heightPercent, 5);
+        
+        chartHtml += `
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <div style="width: 100%; background: linear-gradient(180deg, #22876f, #124d41); border-radius: 6px 6px 0 0; height: ${barHeight}%; min-height: 5px; transition: height 0.3s ease;"></div>
+                <div style="font-size: 11px; color: #8fa89f; font-weight: 500;">${escapeHtml(item.day)}</div>
+                <div style="font-size: 10px; color: #1a6b5a; font-weight: 700;">₱${Math.round(item.amount)}</div>
+            </div>
+        `;
+    }
+    
+    chartHtml += '</div>';
+    container.innerHTML = chartHtml;
+}
+
+// Call render function when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    renderEarningsChart();
+});
+
+// Quick Status Update - Single click status update from active tasks
+async function quickUpdateStatus(orderNumber, newStatus) {
+    let confirmMessage = '';
+    let successMessage = '';
+    
+    if (newStatus === 'picked_up') {
+        confirmMessage = 'Have you picked up the laundry from the shop?';
+        successMessage = 'Order marked as Picked Up! 📥';
+    } else if (newStatus === 'out_for_delivery') {
+        confirmMessage = 'Are you on your way to deliver the order?';
+        successMessage = 'Order marked as Out for Delivery! 🚚';
+    } else if (newStatus === 'delivered') {
+        confirmMessage = 'Have you successfully delivered the order to the customer?';
+        successMessage = 'Order marked as Delivered! ✅';
+    }
+    
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    showToast('Updating Status', 'Please wait...', 'info');
+    
+    try {
+        const response = await fetch(`/api/rider/order/${orderNumber}/update-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Status Updated!', successMessage, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast('Update Failed', data.message || 'Could not update status', 'danger');
+        }
+    } catch (error) {
+        console.error('Error updating status:', error);
+        showToast('Error', 'Failed to update status. Please try again.', 'danger');
+    }
+}
+
+// Mark as Out for Delivery directly (for ready orders)
+async function markAsOutForDelivery(orderNumber) {
+    if (!confirm('Have you picked up the laundry from the shop? Click OK to mark as Out for Delivery.')) {
+        return;
+    }
+    
+    showToast('Updating Status', 'Please wait...', 'info');
+    
+    try {
+        const response = await fetch(`/api/rider/order/${orderNumber}/update-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: 'out_for_delivery' })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Status Updated!', 'Order marked as Out for Delivery! 🚚', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast('Update Failed', data.message || 'Could not update status', 'danger');
+        }
+    } catch (error) {
+        console.error('Error updating status:', error);
+        showToast('Error', 'Failed to update status. Please try again.', 'danger');
+    }
+}
+
+// ========== NOTIFICATION SYSTEM FOR RIDER ==========
+let riderNotifications = [];
+let riderNotificationCheckInterval = null;
+let currentRiderId = null;
+
+// Get rider ID from the page
+function getCurrentRiderId() {
+    // Try to get from window variable
+    if (typeof window.riderId !== 'undefined' && window.riderId) {
+        return window.riderId;
+    }
+    
+    // Try to get from meta tag
+    const riderIdMeta = document.querySelector('meta[name="rider-id"]');
+    if (riderIdMeta && riderIdMeta.getAttribute('content')) {
+        return parseInt(riderIdMeta.getAttribute('content'));
+    }
+    
+    // Try to get from data attribute
+    const riderIdElement = document.getElementById('rider-id-data');
+    if (riderIdElement && riderIdElement.textContent) {
+        return parseInt(riderIdElement.textContent);
+    }
+    
+    // Default
+    console.warn('Rider ID not found, using 0');
+    return 0;
+}
+// Load notifications from localStorage
+function loadRiderNotifications() {
+    const saved = localStorage.getItem('labhatud_rider_notifications');
+    if (saved) {
+        try {
+            riderNotifications = JSON.parse(saved);
+            renderRiderNotifications();
+            updateRiderNotificationBadge();
+        } catch(e) { console.log('Error loading rider notifications:', e); }
+    }
+}
+
+// Save notifications to localStorage
+function saveRiderNotifications() {
+    localStorage.setItem('labhatud_rider_notifications', JSON.stringify(riderNotifications));
+}
+
+// Add a new notification for rider
+function addRiderNotification(title, message, type = 'info', orderId = null, orderNumber = null, earnings = null) {
+    const newNotification = {
+        id: Date.now(),
+        title: title,
+        message: message,
+        type: type,
+        orderId: orderId,
+        orderNumber: orderNumber,
+        earnings: earnings,
+        timestamp: new Date().toISOString(),
+        read: false
+    };
+    
+    riderNotifications.unshift(newNotification);
+    
+    // Keep only last 50 notifications
+    if (riderNotifications.length > 50) {
+        riderNotifications = riderNotifications.slice(0, 50);
+    }
+    
+    saveRiderNotifications();
+    renderRiderNotifications();
+    updateRiderNotificationBadge();
+    
+    // Show toast for new notification
+    showToast(title, message, type);
+    
+    // Send to server
+    saveRiderNotificationToServer(newNotification);
+    
+    return newNotification;
+}
+
+// Save notification to server
+async function saveRiderNotificationToServer(notification) {
+    try {
+        await fetch('/api/notifications/save/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(notification)
+        });
+    } catch(e) { console.log('Could not save notification to server'); }
+}
+
+// Mark notification as read
+function markRiderNotificationAsRead(notificationId) {
+    const notification = riderNotifications.find(n => n.id == notificationId);
+    if (notification && !notification.read) {
+        notification.read = true;
+        saveRiderNotifications();
+        renderRiderNotifications();
+        updateRiderNotificationBadge();
+    }
+}
+
+// Mark all notifications as read
+function markAllRiderNotificationsAsRead() {
+    let hasUnread = false;
+    riderNotifications.forEach(n => {
+        if (!n.read) {
+            n.read = true;
+            hasUnread = true;
+        }
+    });
+    if (hasUnread) {
+        saveRiderNotifications();
+        renderRiderNotifications();
+        updateRiderNotificationBadge();
+        showToast('Notifications', 'All notifications marked as read', 'info');
+    }
+}
+
+// Clear all notifications
+function clearAllRiderNotifications() {
+    if (riderNotifications.length > 0) {
+        riderNotifications = [];
+        saveRiderNotifications();
+        renderRiderNotifications();
+        updateRiderNotificationBadge();
+        showToast('Notifications Cleared', 'All notifications have been cleared', 'info');
+    }
+}
+
+// Update notification badge
+function updateRiderNotificationBadge() {
+    const unreadCount = riderNotifications.filter(n => !n.read).length;
+    const badge = document.getElementById('notifBadge');
+    const bell = document.getElementById('notifBell');
+    
+    if (badge) {
+        if (unreadCount > 0) {
+            badge.style.display = 'flex';
+            badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+            badge.classList.add('has-unread');
+            if (bell) bell.classList.add('has-notification');
+            document.title = `(${unreadCount}) LabHatud | Rider Dashboard`;
+        } else {
+            badge.style.display = 'none';
+            badge.classList.remove('has-unread');
+            if (bell) bell.classList.remove('has-notification');
+            document.title = 'LabHatud | Rider Dashboard';
+        }
+    }
+}
+
+// Render notifications in panel
+function renderRiderNotifications() {
+    const notifList = document.getElementById('notifList');
+    if (!notifList) return;
+    
+    if (riderNotifications.length === 0) {
+        notifList.innerHTML = '<div class="notif-empty">No notifications</div>';
+        return;
+    }
+    
+    let html = '';
+    riderNotifications.forEach(notif => {
+        const timeAgo = getRiderTimeAgoString(notif.timestamp);
+        const notifClass = notif.read ? '' : 'unread';
+        
+        let icon = '🔔';
+        if (notif.type === 'order') icon = '📦';
+        else if (notif.type === 'success') icon = '✅';
+        else if (notif.type === 'warning') icon = '⚠️';
+        else if (notif.type === 'info') icon = 'ℹ️';
+        else if (notif.type === 'earnings') icon = '💰';
+        
+        html += `
+            <div class="notif-item ${notifClass}" data-id="${notif.id}" onclick="handleRiderNotificationClick(${notif.id}, '${notif.orderNumber || ''}')">
+                <div class="notif-dot ${notif.read ? 'read' : ''}"></div>
+                <div class="notif-item-body">
+                    <div class="notif-item-title">${icon} ${escapeHtml(notif.title)}</div>
+                    <div class="notif-item-message">${escapeHtml(notif.message)}</div>
+                    <div class="notif-item-time">${timeAgo}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    notifList.innerHTML = html;
+}
+
+// Handle notification click
+function handleRiderNotificationClick(notificationId, orderNumber) {
+    markRiderNotificationAsRead(notificationId);
+    
+    if (orderNumber) {
+        // Find task card and highlight it
+        const taskCard = document.querySelector(`.task-card[onclick*="${orderNumber}"]`);
+        if (taskCard) {
+            taskCard.style.border = '2px solid var(--teal)';
+            taskCard.style.backgroundColor = 'rgba(26,107,90,0.03)';
+            setTimeout(() => {
+                taskCard.style.border = '';
+                taskCard.style.backgroundColor = '';
+            }, 2000);
+            
+            // Scroll to the task
+            taskCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Switch to tasks panel
+            switchPanel('tasks');
+        } else if (document.getElementById('active-task-card-' + orderNumber)) {
+            const activeCard = document.getElementById('active-task-card-' + orderNumber);
+            activeCard.style.border = '2px solid var(--teal)';
+            activeCard.style.backgroundColor = 'rgba(26,107,90,0.03)';
+            setTimeout(() => {
+                activeCard.style.border = '';
+                activeCard.style.backgroundColor = '';
+            }, 2000);
+            activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            switchPanel('tasks');
+        } else {
+            // Switch to tasks panel to find it
+            switchPanel('tasks');
+        }
+    }
+    
+    // Close notification panel
+    const notifPanel = document.getElementById('notifPanel');
+    if (notifPanel) notifPanel.classList.remove('open');
+}
+
+// Get time ago string
+function getRiderTimeAgoString(timestamp) {
+    const now = new Date();
+    const notifTime = new Date(timestamp);
+    const diffMs = now - notifTime;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return notifTime.toLocaleDateString();
+}
+
+// ========== CHECK FOR NEW TASKS (Orders assigned to rider) ==========
+async function checkNewTasksForRider() {
+    try {
+        const response = await fetch('/api/rider/pending-orders/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrftoken
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.orders && data.orders.length > 0) {
+                data.orders.forEach(order => {
+                    // Check if already notified about this task
+                    const alreadyNotified = riderNotifications.some(n => 
+                        n.orderNumber === order.order_number && 
+                        (n.title === '🛵 New Delivery Task' || n.title === '📦 New Assignment')
+                    );
+                    
+                    if (!alreadyNotified) {
+                        // Also check if the order is not already in the UI
+                        const existingCard = document.getElementById(`task-card-${order.id}`);
+                        if (!existingCard) {
+                            addRiderNotification(
+                                '🛵 New Delivery Task!',
+                                `You have a new delivery task #${order.order_number} from ${order.shop_name}. Accept it to start earning!`,
+                                'order',
+                                order.id,
+                                order.order_number
+                            );
+                            
+                            // Update counts
+                            const newCount = document.querySelectorAll('#allTasksGrid .task-card[data-status="new"]').length + 1;
+                            const sideBadge = document.getElementById('sideTaskCount');
+                            if (sideBadge) sideBadge.textContent = newCount;
+                            const pendingTasks = document.getElementById('pendingTasks');
+                            if (pendingTasks) pendingTasks.textContent = newCount;
+                            const newAssignments = document.getElementById('newAssignmentsCount');
+                            if (newAssignments) newAssignments.textContent = newCount;
+                        }
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.log('Error checking new tasks:', error);
+    }
+}
+
+// ========== CHECK RIDER ASSIGNMENT UPDATES ==========
+async function checkRiderAssignmentUpdates() {
+    try {
+        const response = await fetch('/api/rider/assignments/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.assignments && data.assignments.length > 0) {
+                data.assignments.forEach(assignment => {
+                    const alreadyNotified = riderNotifications.some(n => 
+                        n.orderNumber === assignment.order_number && 
+                        n.title.includes('Assigned')
+                    );
+                    
+                    if (!alreadyNotified && assignment.status === 'accepted') {
+                        addRiderNotification(
+                            '📦 New Assignment',
+                            `Order #${assignment.order_number} has been assigned to you. Pickup from ${assignment.shop_name}.`,
+                            'order',
+                            assignment.order_id,
+                            assignment.order_number
+                        );
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.log('Error checking assignments:', error);
+    }
+}
+
+// ========== CHECK FOR EARNINGS UPDATES ==========
+async function checkEarningsUpdates() {
+    try {
+        const response = await fetch('/api/rider/earnings/updates/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.new_earnings && data.new_earnings.length > 0) {
+                data.new_earnings.forEach(earning => {
+                    const alreadyNotified = riderNotifications.some(n => 
+                        n.orderNumber === earning.order_number && 
+                        n.title.includes('Earned')
+                    );
+                    
+                    if (!alreadyNotified) {
+                        addRiderNotification(
+                            '💰 Earnings Updated!',
+                            `You earned ₱${earning.amount} for delivery #${earning.order_number}. ${earning.message || 'Payment processed!'}`,
+                            'earnings',
+                            earning.order_id,
+                            earning.order_number,
+                            earning.amount
+                        );
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.log('Error checking earnings:', error);
+    }
+}
+
+// ========== CHECK RIDER REQUESTS STATUS ==========
+async function checkRiderRequestStatus() {
+    try {
+        const response = await fetch('/api/rider/request-status/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.request_approved) {
+                const alreadyNotified = riderNotifications.some(n => n.title === '✅ Account Approved!');
+                if (!alreadyNotified) {
+                    addRiderNotification(
+                        '✅ Account Approved!',
+                        'Your rider account has been approved! You can now accept delivery tasks.',
+                        'success'
+                    );
+                }
+            } else if (data.request_pending && !data.already_notified) {
+                addRiderNotification(
+                    '⏳ Account Pending Approval',
+                    'Your rider account is awaiting admin approval. You will be notified once approved.',
+                    'warning'
+                );
+            }
+        }
+    } catch (error) {
+        console.log('Error checking request status:', error);
+    }
+}
+
+// ========== CHECK COMPLETED DELIVERIES ==========
+async function checkCompletedDeliveries() {
+    try {
+        const response = await fetch('/api/rider/completed-orders/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.completed && data.completed.length > 0) {
+                data.completed.forEach(order => {
+                    // Check if delivered within last 5 minutes
+                    const deliveredTime = new Date(order.delivered_at);
+                    const now = new Date();
+                    const diffMinutes = (now - deliveredTime) / 60000;
+                    
+                    if (diffMinutes < 5) {
+                        const alreadyNotified = riderNotifications.some(n => 
+                            n.orderNumber === order.order_number && 
+                            n.title.includes('Delivered')
+                        );
+                        
+                        if (!alreadyNotified) {
+                            addRiderNotification(
+                                '✅ Delivery Completed!',
+                                `Order #${order.order_number} has been successfully delivered. You earned ₱${order.earnings}.`,
+                                'success',
+                                order.id,
+                                order.order_number,
+                                order.earnings
+                            );
+                        }
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.log('Error checking completed deliveries:', error);
+    }
+}
+
+// ========== CHECK ORDER UPDATES (Shop status changes) ==========
+async function checkOrderUpdatesForRider() {
+    try {
+        const response = await fetch('/api/rider/order-updates/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.updates && data.updates.length > 0) {
+                data.updates.forEach(update => {
+                    const alreadyNotified = riderNotifications.some(n => 
+                        n.orderNumber === update.order_number && 
+                        n.title.includes(update.status_display)
+                    );
+                    
+                    if (!alreadyNotified) {
+                        let title = '';
+                        let message = '';
+                        let type = 'info';
+                        
+                        switch(update.status) {
+                            case 'ready':
+                                title = '📦 Order Ready for Pickup';
+                                message = `Order #${update.order_number} is ready for pickup at ${update.shop_name}. Please head to the shop.`;
+                                type = 'order';
+                                break;
+                            case 'cancelled':
+                                title = '❌ Order Cancelled';
+                                message = `Order #${update.order_number} has been cancelled. You will not need to deliver this order.`;
+                                type = 'warning';
+                                break;
+                            default:
+                                return;
+                        }
+                        
+                        addRiderNotification(title, message, type, update.order_id, update.order_number);
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.log('Error checking order updates:', error);
+    }
+}
+
+// ========== WELCOME NOTIFICATION FOR RIDER ==========
+function showRiderWelcomeNotification() {
+    const hasSeenWelcome = localStorage.getItem('labhatud_rider_welcome_shown');
+    
+    if (!hasSeenWelcome) {
+        setTimeout(() => {
+            addRiderNotification(
+                '👋 Welcome to LabHatud Rider!',
+                'Thank you for joining our delivery team! You can now accept delivery tasks and start earning.',
+                'success'
+            );
+            localStorage.setItem('labhatud_rider_welcome_shown', 'true');
+        }, 1500);
+    }
+}
+
+// ========== DAILY SUMMARY NOTIFICATION ==========
+function showRiderDailySummary() {
+    const lastSummaryDate = localStorage.getItem('labhatud_rider_summary_date');
+    const today = new Date().toDateString();
+    
+    if (lastSummaryDate !== today) {
+        // Get today's stats from the page
+        const todayDeliveries = document.querySelector('.stats-grid-banner .stat-item:first-child .stat-number')?.textContent || '0';
+        const todayEarnings = document.querySelector('.stats-grid-banner .stat-item:last-child .stat-number')?.textContent || '₱ 0';
+        
+        setTimeout(() => {
+            addRiderNotification(
+                '📊 Daily Summary',
+                `Today's performance: ${todayDeliveries} deliveries completed · ${todayEarnings} earnings`,
+                'info'
+            );
+            localStorage.setItem('labhatud_rider_summary_date', today);
+        }, 3000);
+    }
+}
+
+// ========== START NOTIFICATION CHECKING ==========
+function startRiderNotificationChecking() {
+    // Check immediately
+    checkNewTasksForRider();
+    checkRiderAssignmentUpdates();
+    checkEarningsUpdates();
+    checkRiderRequestStatus();
+    checkCompletedDeliveries();
+    checkOrderUpdatesForRider();
+    
+    // Then check every 30 seconds
+    if (riderNotificationCheckInterval) {
+        clearInterval(riderNotificationCheckInterval);
+    }
+    riderNotificationCheckInterval = setInterval(() => {
+        checkNewTasksForRider();
+        checkRiderAssignmentUpdates();
+        checkEarningsUpdates();
+        checkRiderRequestStatus();
+        checkCompletedDeliveries();
+        checkOrderUpdatesForRider();
+    }, 30000);
+}
+
+// ========== INITIALIZE RIDER NOTIFICATION SYSTEM ==========
+document.addEventListener('DOMContentLoaded', function() {
+    // Load existing notifications
+    loadRiderNotifications();
+    
+    // Show welcome notification
+    showRiderWelcomeNotification();
+    
+    // Show daily summary
+    showRiderDailySummary();
+    
+    // Start checking for updates
+    startRiderNotificationChecking();
+    
+    // Setup clear all button
+    const notifClear = document.getElementById('notifClear');
+    if (notifClear) {
+        notifClear.onclick = function(e) {
+            e.stopPropagation();
+            clearAllRiderNotifications();
+        };
+    }
+    
+    // Close panel when clicking outside
+    document.addEventListener('click', function(e) {
+        const notifPanel = document.getElementById('notifPanel');
+        const notifBell = document.getElementById('notifBell');
+        if (notifPanel && notifBell && !notifBell.contains(e.target) && !notifPanel.contains(e.target)) {
+            notifPanel.classList.remove('open');
+        }
+    });
+    
+    // Replace notification bell click handler
+    const notifBell = document.getElementById('notifBell');
+    if (notifBell) {
+        // Remove existing event listeners by cloning
+        const newBell = notifBell.cloneNode(true);
+        notifBell.parentNode.replaceChild(newBell, notifBell);
+        
+        newBell.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const notifPanel = document.getElementById('notifPanel');
+            if (notifPanel) {
+                notifPanel.classList.toggle('open');
+            }
+        });
+    }
+    
+    currentRiderId = getCurrentRiderId();
+    console.log('Rider notification system initialized');
+});
+
+// Test function for debugging
+function testRiderNotification() {
+    addRiderNotification('🔔 Test Notification', 'This is a test notification for the rider.', 'info');
+}
+
+</script>
+</body>
+</html>

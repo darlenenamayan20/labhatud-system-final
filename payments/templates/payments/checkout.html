@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout</title>
+</head>
+<body>
+    <h1>Checkout</h1>
+ 
+    {% if messages %}
+        {% for message in messages %}
+            <p style="color: red;">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+ 
+    <form method="POST">
+        {% csrf_token %}
+        <label>Description:
+            <input type="text" name="description" value="My Order" required>
+        </label><br><br>
+        <label>Amount (PHP):
+            <input type="number" name="amount" value="100.00" step="0.01" min="20" required>
+        </label><br><br>
+        <button type="submit">Pay with PayMongo</button>
+    </form>
+</body>
+</html>

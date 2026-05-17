@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LabHatud | Laundry Ecosystem</title>
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+
+    <!-- ── NAV ── -->
+    <nav id="mainNav">
+        <a href="{% url 'index' %}" class="nav-logo">
+            <div class="nav-logo-badge">LH</div>
+            <span class="nav-logo-name">LABHATUD</span>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="#how">How it Works</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#roles">Join Us</a></li>
+            <li><a href="#testimonials">Reviews</a></li>
+        </ul>
+
+        <div class="nav-cta">
+            <a href="{% url 'login_register' %}" class="btn-outline-nav">Log In</a>
+            <a href="{% url 'login_register' %}" class="btn-filled-nav">Get Started →</a>
+        </div>
+
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#how">How it Works</a>
+        <a href="#services">Services</a>
+        <a href="#roles">Join Us</a>
+        <a href="#testimonials">Reviews</a>
+        <a href="{% url 'login_register' %}" style="color: var(--teal); font-weight:700;">Log In / Register →</a>
+    </div>
+
+    <!-- ── HERO ── -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="hero-dots"></div>
+
+        <div class="hero-inner">
+            <div class="hero-left">
+                <div class="hero-tag">
+                    <span class="hero-tag-dot"></span>
+                    Now Live in Cantilan
+                </div>
+
+                <h1 class="hero-title">
+                    Your Laundry,<br>
+                    Done <span class="accent">Smarter</span><br>
+                    &amp; Faster
+                </h1>
+
+                <p class="hero-desc">
+                    LabHatud connects customers, riders, and laundry owners in one seamless ecosystem — from pickup to delivery, all tracked in real time.
+                </p>
+
+                <div class="hero-actions">
+                    <a href="{% url 'login_register' %}" class="btn-primary">Start for Free →</a>
+                    <a href="#how" class="btn-ghost">▶ How it works</a>
+                </div>
+
+                <div class="hero-stats">
+                    <div>
+                        <div class="hero-stat-num">10K+</div>
+                        <div class="hero-stat-label">Active Users</div>
+                    </div>
+                    <div>
+                        <div class="hero-stat-num">50+</div>
+                        <div class="hero-stat-label">Partner Shops</div>
+                    </div>
+                    <div>
+                        <div class="hero-stat-num">2hrs</div>
+                        <div class="hero-stat-label">Express Service</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="badge-float badge-1">
+                    <span class="badge-emoji">🛵</span>
+                    <span>Rider on the way · <b>12 min</b></span>
+                </div>
+                <div class="badge-float badge-2">
+                    <span class="badge-emoji">✅</span>
+                    <span>Order Completed!</span>
+                </div>
+
+                <div class="hero-card-stack">
+                    <div class="card-behind"></div>
+                    <div class="card-float card-main">
+                        <div class="order-status-bar">
+                            <span class="status-dot"></span>
+                            <span class="status-text">LIVE TRACKING</span>
+                        </div>
+                        <div class="order-title">Order #LH-2847</div>
+                        <div class="order-meta">Estimated delivery · Today, 4:30 PM</div>
+
+                        <div class="progress-steps">
+                            <div class="step-item">
+                                <div class="step-circle done">✓</div>
+                                <div class="step-label">Picked Up</div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-circle done">✓</div>
+                                <div class="step-label">Washing</div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-circle active">→</div>
+                                <div class="step-label">Drying</div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-circle">📦</div>
+                                <div class="step-label">Deliver</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── HOW IT WORKS ── -->
+    <section class="how-section" id="how">
+        <div class="section-inner">
+            <div class="reveal">
+                <div class="section-tag">⚙ Process</div>
+                <h2 class="section-title">Simple. Fast.<br>Reliable.</h2>
+                <p class="section-desc">From booking to doorstep — everything happens in a few taps.</p>
+            </div>
+
+            <div class="how-grid">
+                <div class="steps-list reveal">
+                    <div class="step-row">
+                        <div class="step-num">01</div>
+                        <div class="step-content">
+                            <h4>Book Your Pickup</h4>
+                            <p>Schedule a pickup in seconds through the app. Choose your preferred laundry shop or let us assign the nearest one.</p>
+                        </div>
+                    </div>
+                    <div class="step-row">
+                        <div class="step-num">02</div>
+                        <div class="step-content">
+                            <h4>Rider Collects Your Clothes</h4>
+                            <p>A verified rider arrives at your doorstep, collects your laundry, and brings it to the partner shop — tracked live.</p>
+                        </div>
+                    </div>
+                    <div class="step-row">
+                        <div class="step-num">03</div>
+                        <div class="step-content">
+                            <h4>Washed &amp; Processed</h4>
+                            <p>Your laundry is cleaned with care using eco-friendly detergents. Status updates sent every step of the way.</p>
+                        </div>
+                    </div>
+                    <div class="step-row">
+                        <div class="step-num">04</div>
+                        <div class="step-content">
+                            <h4>Delivered Back to You</h4>
+                            <p>Fresh, folded, and delivered right to your door. Rate your experience and keep track of all orders in your dashboard.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="how-visual reveal">
+                    <div class="phone-mock">
+                        <div class="phone-screen">
+                            <div class="phone-header">📱 LabHatud App</div>
+
+                            <div class="mini-order-card">
+                                <div class="moc-title">Active Orders</div>
+                                <div class="moc-row">
+                                    <span>Order #LH-2847</span>
+                                    <span class="mini-badge badge-yellow">Drying</span>
+                                </div>
+                                <div class="moc-row">
+                                    <span>5kg Mixed Load</span>
+                                    <span>₱ 185</span>
+                                </div>
+                            </div>
+
+                            <div class="mini-order-card">
+                                <div class="moc-title">Recent</div>
+                                <div class="moc-row">
+                                    <span>Order #LH-2831</span>
+                                    <span class="mini-badge badge-green">Delivered</span>
+                                </div>
+                                <div class="moc-row">
+                                    <span>3kg Whites</span>
+                                    <span>₱ 120</span>
+                                </div>
+                            </div>
+
+                            <div class="mini-order-card">
+                                <div class="moc-title">Rider Nearby</div>
+                                <div class="moc-row" style="color:rgba(255,255,255,0.8);">
+                                    <span>🛵 Juan Dela Cruz</span>
+                                    <span class="mini-badge badge-blue">12 min</span>
+                                </div>
+                            </div>
+
+                            <div style="text-align:center; margin-top: auto;">
+                                <div style="background: var(--teal); color: #0D2B22; font-weight:700; font-size:0.75rem; border-radius: 20px; padding: 8px 16px; display:inline-block;">+ New Order</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── SERVICES ── -->
+    <section class="services-section" id="services">
+        <div class="section-inner">
+            <div class="services-header reveal">
+                <div>
+                    <div class="section-tag">💎 Services</div>
+                    <h2 class="section-title">Everything You<br>Need, Covered</h2>
+                </div>
+                <p class="section-desc" style="max-width:340px;">Comprehensive laundry solutions for individuals and businesses alike.</p>
+            </div>
+
+            <div class="services-grid reveal">
+                <div class="service-card featured">
+                    <div class="svc-icon">🧺</div>
+                    <div class="svc-title">On-Demand Pickup &amp; Delivery</div>
+                    <div class="svc-desc">Schedule in seconds, track in real time. Our riders handle the heavy lifting so you don't have to leave your home.</div>
+                    <span class="svc-tag">Most Popular</span>
+                </div>
+                <div class="service-card">
+                    <div class="svc-icon">⚡</div>
+                    <div class="svc-title">2-Hour Express Service</div>
+                    <div class="svc-desc">Need it fast? Our express lane partners prioritize your order and get it back to you within 2 hours.</div>
+                    <span class="svc-tag">Express</span>
+                </div>
+                <div class="service-card">
+                    <div class="svc-icon">♻️</div>
+                    <div class="svc-title">Eco-Friendly Washing</div>
+                    <div class="svc-desc">All partner shops use biodegradable, skin-safe detergents. Good for your clothes. Good for the planet.</div>
+                    <span class="svc-tag">Eco</span>
+                </div>
+                <div class="service-card">
+                    <div class="svc-icon">📊</div>
+                    <div class="svc-title">Owner Dashboard</div>
+                    <div class="svc-desc">Laundry shop owners get a powerful management suite — orders, staff, earnings, analytics, all in one place.</div>
+                    <span class="svc-tag">For Owners</span>
+                </div>
+                <div class="service-card">
+                    <div class="svc-icon">🛵</div>
+                    <div class="svc-title">Rider Partner Network</div>
+                    <div class="svc-desc">Earn flexibly as a delivery partner. Accept jobs, track earnings, and build your reputation on the platform.</div>
+                    <span class="svc-tag">For Riders</span>
+                </div>
+                <div class="service-card">
+                    <div class="svc-icon">🔔</div>
+                    <div class="svc-title">Smart Notifications</div>
+                    <div class="svc-desc">Real-time SMS and in-app alerts at every stage of your laundry — so you're never left guessing.</div>
+                    <span class="svc-tag">Always Updated</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── ROLES ── -->
+    <section class="roles-section" id="roles">
+        <div class="section-inner">
+            <div class="reveal" style="text-align:center; max-width:560px; margin:0 auto 1rem;">
+                <div class="section-tag">👥 Who's It For</div>
+                <h2 class="section-title">One Platform,<br>Three Roles</h2>
+                <p class="section-desc" style="margin: 0 auto;">Whether you're booking laundry, delivering it, or running the shop — LabHatud has a tailored experience for you.</p>
+            </div>
+
+            <div class="roles-grid reveal">
+                <div class="role-card role-card-customer">
+                    <div class="role-icon">🧺</div>
+                    <div class="role-title">Customer</div>
+                    <div class="role-desc">Busy schedule? We've got your laundry. Book pickups, track orders, and pay securely — all from your phone.</div>
+                    <ul class="role-features">
+                        <li>Schedule pickup &amp; delivery</li>
+                        <li>Real-time order tracking</li>
+                        <li>Order history &amp; receipts</li>
+                        <li>Rate your experience</li>
+                    </ul>
+                    <a href="{% url 'login_register' %}" class="role-cta">Start Booking →</a>
+                </div>
+
+                <div class="role-card role-card-rider">
+                    <div class="role-icon">🛵</div>
+                    <div class="role-title">Rider</div>
+                    <div class="role-desc">Earn on your own terms. Accept delivery jobs, build your score, and get paid fast through the platform.</div>
+                    <ul class="role-features">
+                        <li>Flexible working hours</li>
+                        <li>In-app navigation &amp; support</li>
+                        <li>Earnings tracker</li>
+                        <li>Verified partner badge</li>
+                    </ul>
+                    <a href="{% url 'login_register' %}" class="role-cta">Become a Rider →</a>
+                </div>
+
+                <div class="role-card role-card-owner">
+                    <div class="role-icon">🏪</div>
+                    <div class="role-title">Laundry Owner</div>
+                    <div class="role-desc">Grow your laundry business with a powerful digital partner. More orders, less admin, better insights.</div>
+                    <ul class="role-features">
+                        <li>Order management dashboard</li>
+                        <li>Staff assignment tools</li>
+                        <li>Revenue &amp; analytics reports</li>
+                        <li>Customer reviews panel</li>
+                    </ul>
+                    <a href="{% url 'login_register' %}" class="role-cta">List Your Shop →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── TESTIMONIALS ── -->
+    <section class="testimonials-section" id="testimonials">
+        <div class="section-inner">
+            <div class="reveal" style="text-align:center; max-width:500px; margin:0 auto;">
+                <div class="section-tag">⭐ Reviews</div>
+                <h2 class="section-title">Loved by<br>Thousands</h2>
+            </div>
+
+            <div class="testi-grid reveal">
+                <div class="testi-card">
+                    <div class="testi-stars">★★★★★</div>
+                    <p class="testi-text">"Super convenient! I booked a pickup before work and my clothes were back before dinner. The tracking feature is a game changer."</p>
+                    <div class="testi-author">
+                        <div class="testi-avatar">MA</div>
+                        <div>
+                            <div class="testi-name">Maria A.</div>
+                            <div class="testi-role-label">Customer · Cantilan
+                        </div>
+                    </div>
+                </div>
+                <div class="testi-card">
+                    <div class="testi-stars">★★★★★</div>
+                    <p class="testi-text">"As a rider, the app makes my daily routes so smooth. I get notified instantly, and the earnings summary at the end of the day is perfect."</p>
+                    <div class="testi-author">
+                        <div class="testi-avatar">RB</div>
+                        <div>
+                            <div class="testi-name">Ramon B.</div>
+                            <div class="testi-role-label">Delivery Rider</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testi-card">
+                    <div class="testi-stars">★★★★★</div>
+                    <p class="testi-text">"Our shop's order volume doubled after joining LabHatud. The dashboard is intuitive and managing multiple orders at once is finally stress-free."</p>
+                    <div class="testi-author">
+                        <div class="testi-avatar">LC</div>
+                        <div>
+                            <div class="testi-name">Lita C.</div>
+                            <div class="testi-role-label">Shop Owner · Matina</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── CTA ── -->
+    <section class="cta-section">
+        <div class="section-inner">
+            <div class="cta-banner reveal">
+                <h2>Ready to Experience<br>Smarter Laundry?</h2>
+                <p>Join thousands of users already using LabHatud across Davao City.</p>
+                <div class="cta-buttons">
+                    <a href="{% url 'login_register' %}" class="btn-cta-white">Create Free Account →</a>
+                    <a href="#roles" class="btn-cta-outline">Explore Roles</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── FOOTER ── -->
+<footer>
+    <div class="footer-inner">
+        <div class="footer-top">
+            <div class="footer-brand">
+                <a href="{% url 'index' %}" class="footer-logo">
+                    <div class="nav-logo-badge">LH</div>
+                    <span class="nav-logo-name">LABHATUD</span>
+                </a>
+                <p class="footer-desc">Cantilan's smart laundry ecosystem — connecting customers, riders, and owners in one seamless platform.</p>
+            </div>
+            <div class="footer-col">
+                <h5>Platform</h5>
+                <ul>
+                    <li><a href="#how">How it Works</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#roles">For Customers</a></li>
+                    <li><a href="#roles">For Riders</a></li>
+                    <li><a href="#roles">For Owners</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Company</h5>
+                <ul>
+                    <li><a href="#" onclick="showAboutModal(); return false;">About Us</a></li>
+                    <li><a href="#" onclick="showCareersModal(); return false;">Careers</a></li>
+                    <li><a href="#" onclick="showBlogModal(); return false;">Blog</a></li>
+                    <li><a href="#" onclick="showPressModal(); return false;">Press</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Support</h5>
+                <ul>
+                    <li><a href="#" onclick="showHelpModal(); return false;">Help Center</a></li>
+                    <li><a href="#" onclick="showContactModal(); return false;">Contact Us</a></li>
+                    <li><a href="#" onclick="showPrivacyModal(); return false;">Privacy Policy</a></li>
+                    <li><a href="#" onclick="showTermsModal(); return false;">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p class="footer-copy">© 2026 LabHatud. All rights reserved. Built with ♥ in Cantilan.</p>
+            <div class="footer-socials">
+                <a href="https://facebook.com/labhatud" target="_blank" class="social-btn" aria-label="Facebook">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/>
+                    </svg>
+                </a>
+                <a href="https://instagram.com/labhatud" target="_blank" class="social-btn" aria-label="Instagram">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153.509.5.902 1.105 1.153 1.772.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 0 1-1.153 1.772c-.5.509-1.105.902-1.772 1.153-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 0 1-1.772-1.153 4.904 4.904 0 0 1-1.153-1.772c-.247-.637-.415-1.363-.465-2.428-.047-1.066-.06-1.405-.06-4.122 0-2.717.01-3.056.06-4.122.05-1.065.218-1.79.465-2.428a4.88 4.88 0 0 1 1.153-1.772c.5-.509 1.105-.902 1.772-1.153.637-.247 1.363-.415 2.428-.465C8.944 2.01 9.283 2 12 2zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm6.5-.25a1.25 1.25 0 0 0-2.5 0 1.25 1.25 0 0 0 2.5 0zM12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/>
+                    </svg>
+                </a>
+                <a href="https://t.me/labhatud" target="_blank" class="social-btn" aria-label="Telegram">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.13-.05-.18-.07-.05-.17-.03-.24-.02-.1.02-1.68 1.07-4.75 3.14-.45.31-.86.46-1.22.45-.4-.01-1.17-.23-1.74-.41-.7-.22-1.26-.34-1.21-.72.03-.2.3-.4.83-.61 3.27-1.42 5.45-2.36 6.54-2.82 3.12-1.31 3.77-1.54 4.19-1.54.09 0 .3.02.43.13.11.09.15.22.16.36-.01.06 0 .16-.02.28z"/>
+                    </svg>
+                </a>
+                <a href="mailto:labhatud@gmail.com" class="social-btn" aria-label="Gmail">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script>
+        // ─ Navbar scroll effect ─
+        const nav = document.getElementById('mainNav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 40);
+        });
+
+        // ─ Hamburger ─
+        const hamburger = document.getElementById('hamburger');
+        const mobileMenu = document.getElementById('mobileMenu');
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            mobileMenu.classList.toggle('open');
+        });
+        mobileMenu.querySelectorAll('a').forEach(a => {
+            a.addEventListener('click', () => {
+                hamburger.classList.remove('open');
+                mobileMenu.classList.remove('open');
+            });
+        });
+
+        // ─ Scroll reveal ─
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, i) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => entry.target.classList.add('visible'), i * 80);
+                }
+            });
+        }, { threshold: 0.12 });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+
+// Modal functions for footer links
+function showHelpModal() {
+    document.getElementById('helpModal').classList.add('open');
+}
+
+function showContactModal() {
+    document.getElementById('contactModal').classList.add('open');
+}
+
+function showPrivacyModal() {
+    document.getElementById('privacyModal').classList.add('open');
+}
+
+function showTermsModal() {
+    document.getElementById('termsModal').classList.add('open');
+}
+
+function showAboutModal() {
+    document.getElementById('aboutModal').classList.add('open');
+}
+
+function showCareersModal() {
+    document.getElementById('careersModal').classList.add('open');
+}
+
+function showBlogModal() {
+    document.getElementById('blogModal').classList.add('open');
+}
+
+function showPressModal() {
+    document.getElementById('pressModal').classList.add('open');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('open');
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    const modals = document.querySelectorAll('.footer-modal-overlay');
+    modals.forEach(modal => {
+        if (e.target === modal) {
+            modal.classList.remove('open');
+        }
+    });
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const openModals = document.querySelectorAll('.footer-modal-overlay.open');
+        openModals.forEach(modal => {
+            modal.classList.remove('open');
+        });
+    }
+});
+    </script>
+
+<!-- ── MODALS FOR FOOTER LINKS ── -->
+<style>
+    .footer-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(5px);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    .footer-modal-overlay.open {
+        display: flex;
+        animation: fadeIn 0.2s ease;
+    }
+    .footer-modal {
+        background: var(--card);
+        border-radius: 24px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        animation: slideUp 0.3s ease;
+    }
+    .footer-modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .footer-modal-header h3 {
+        font-family: 'Syne', sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text);
+    }
+    .footer-modal-close {
+        background: none;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: var(--text3);
+        transition: color 0.2s;
+    }
+    .footer-modal-close:hover {
+        color: var(--danger);
+    }
+    .footer-modal-body {
+        padding: 24px;
+    }
+    .footer-modal-body p {
+        margin-bottom: 12px;
+        line-height: 1.6;
+        color: var(--text2);
+    }
+    .footer-modal-body ul {
+        margin: 12px 0;
+        padding-left: 20px;
+    }
+    .footer-modal-body li {
+        margin: 8px 0;
+        color: var(--text2);
+    }
+    .contact-info {
+        background: var(--bg2);
+        padding: 16px;
+        border-radius: 12px;
+        margin: 16px 0;
+    }
+    .contact-info p {
+        margin: 8px 0;
+    }
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<!-- Help Center Modal -->
+<div class="footer-modal-overlay" id="helpModal">
+    <div class="footer-modal">
+        <div class="footer-modal-header">
+            <h3>📚 Help Center</h3>
+            <button class="footer-modal-close" onclick="closeModal('helpModal')">×</button>
+        </div>
+        <div class="footer-modal-body">
+            <p><strong>How can we help you?</strong></p>
+            <ul>
+                <li>📖 <strong>Getting Started:</strong> <a href="{% url 'login_register' %}" style="color: var(--teal);">Create an account</a> to start booking laundry services.</li>
+                <li>🚚 <strong>Tracking Orders:</strong> Monitor your laundry in real-time from pickup to delivery.</li>
+                <li>💰 <strong>Payments:</strong> We accept GCash, PayPal, and Cash on Delivery.</li>
+                <li>⭐ <strong>Reviews:</strong> Rate your experience after each delivery.</li>
+            </ul>
+            <p>For immediate assistance, contact our support team:</p>
+            <div class="contact-info">
+                <p>📞 <strong>Hotline:</strong> +63 912 345 6789</p>
+                <p>✉️ <strong>Email:</strong> support@labhatud.com</p>
+                <p>💬 <strong>Live Chat:</strong> Available 8 AM - 8 PM, Mon-Sat</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Us Modal -->
+<div class="footer-modal-overlay" id="contactModal">
+    <div class="footer-modal">
+        <div class="footer-modal-header">
+            <h3>📞 Contact Us</h3>
+            <button class="footer-modal-close" onclick="closeModal('contactModal')">×</button>
+        </div>
+        <div class="footer-modal-body">
+            <p>We'd love to hear from you! Reach out to us through any of these channels:</p>
+            <div class="contact-info">
+                <p><strong>📍 Address:</strong></p>
+                <p>Cantilan, Surigao del Sur, Philippines</p>
+                <p><strong>📞 Phone Numbers:</strong></p>
+                <p>Customer Support: +63 912 345 6789</p>
+                <p>Business Inquiries: +63 923 456 7890</p>
+                <p><strong>✉️ Email:</strong></p>
+                <p>General Inquiries: info@labhatud.com</p>
+                <p>Support: support@labhatud.com</p>
+                <p>Partnerships: partners@labhatud.com</p>
+                <p><strong>🕐 Business Hours:</strong></p>
+                <p>Monday – Saturday: 8:00 AM – 8:00 PM</p>
+                <p>Sunday: 9:00 AM – 5:00 PM</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Policy Modal -->
+<div class="footer-modal-overlay" id="privacyModal">
+    <div class="footer-modal">
+        <div class="footer-modal-header">
+            <h3>🔒 Privacy Policy</h3>
+            <button class="footer-modal-close" onclick="closeModal('privacyModal')">×</button>
+        </div>
+        <div class="footer-modal-body">
+            <p><strong>Last Updated: January 1, 2026</strong></p>
+            <p>At LabHatud, we take your privacy seriously. This policy describes how we collect, use, and protect your personal information.</p>
+            <p><strong>Information We Collect:</strong></p>
+            <ul>
+                <li>Personal information (name, email, phone number, address)</li>
+                <li>Order history and preferences</li>
+                <li>Device and usage data</li>
+            </ul>
+            <p><strong>How We Use Your Information:</strong></p>
+            <ul>
+                <li>Process and deliver your laundry orders</li>
+                <li>Communicate order updates and promotions</li>
+                <li>Improve our services and user experience</li>
+            </ul>
+            <p><strong>Data Security:</strong> We use industry-standard encryption and security measures to protect your data.</p>
+            <p><strong>Your Rights:</strong> You may access, correct, or delete your personal information at any time through your account settings.</p>
+            <p>For questions about this policy, contact us at privacy@labhatud.com</p>
+        </div>
+    </div>
+</div>
+
+<!-- Terms of Service Modal -->
+<div class="footer-modal-overlay" id="termsModal">
+    <div class="footer-modal">
+        <div class="footer-modal-header">
+            <h3>📜 Terms of Service</h3>
+            <button class="footer-modal-close" onclick="closeModal('termsModal')">×</button>
+        </div>
+        <div class="footer-modal-body">
+            <p><strong>Last Updated: January 1, 2026</strong></p>
+            <p><strong>1. Acceptance of Terms</strong><br>By using LabHatud, you agree to these Terms of Service.</p>
+            <p><strong>2. Service Description</strong><br>LabHatud connects customers with laundry shops and delivery riders for laundry pickup and delivery services.</p>
+            <p><strong>3. User Accounts</strong><br>You must create an account to use our services. You are responsible for maintaining the security of your account.</p>
+            <p><strong>4. Payments</strong><br>All payments are processed securely through our payment partners. Fees are calculated based on weight and service type.</p>
+            <p><strong>5. Cancellations and Refunds</strong><br>Orders can be cancelled before pickup. Refunds are processed according to our refund policy.</p>
+            <p><strong>6. User Conduct</strong><br>You agree to use the platform lawfully and respectfully toward our partners and other users.</p>
+            <p><strong>7. Limitation of Liability</strong><br>LabHatud is not responsible for delays caused by circumstances beyond our control.</p>
+            <p><strong>8. Changes to Terms</strong><br>We may update these terms from time to time. Continued use constitutes acceptance of changes.</p>
+            <p>For questions, contact legal@labhatud.com</p>
+        </div>
+    </div>
+</div>
+
+<!-- About Us Modal -->
+<div class="footer-modal-overlay" id="aboutModal">
+    <div class="footer-modal">
+        <div class="footer-modal-header">
+            <h3>🏪 About LabHatud</h3>
+            <button class="footer-modal-close" onclick="closeModal('aboutModal')">×</button>
+        </div>
+        <div class="footer-modal-body">
+            <p>LabHatud is Cantilan's premier smart laundry ecosystem, founded with a mission to make laundry day effortless for everyone.</p>
+            <p><strong>Our Vision</strong><br>To revolutionize the laundry industry in the Philippines through technology, creating seamless connections between customers, laundry shops, and delivery riders.</p>
+            <p><strong>Our Values</strong></p>
+            <ul>
+                <li>🤝 <strong>Reliability:</strong> We deliver on our promises.</li>
+                <li>🌱 <strong>Sustainability:</strong> Eco-friendly practices in every partnership.</li>
+                <li>💡 <strong>Innovation:</strong> Continuous improvement through technology.</li>
+                <li>❤️ <strong>Community:</strong> Supporting local businesses and riders.</li>
+            </ul>
+            <p><strong>Founded:</strong> 2024</p>
+            <p><strong>Headquarters:</strong> Cantilan, Surigao del Sur, Philippines</p>
+        </div>
+    </div>
+</div>
+
+<!-- Careers Modal -->
+<div class="footer-modal-overlay" id="careersModal">
+    <div class="footer-modal">
+        <div class="footer-modal-header">
+            <h3>💼 Careers at LabHatud</h3>
+            <button class="footer-modal-close" onclick="closeModal('careersModal')">×</button>
+        </div>
+        <div class="footer-modal-body">
+            <p>Join our growing team! We're always looking for talented individuals passionate about technology and service excellence.</p>
+            <p><strong>Current Openings:</strong></p>
+            <ul>
+                <li>🚀 <strong>Software Developer</strong> - Full-time, Cantilan</li>
+                <li>📱 <strong>Mobile App Developer (Flutter)</strong> - Full-time, Remote</li>
+                <li>🎨 <strong>UI/UX Designer</strong> - Full-time, Cantilan</li>
+                <li>🤝 <strong>Business Development Manager</strong> - Full-time, Cantilan</li>
+                <li>🛵 <strong>Rider Partners</strong> - Freelance, Cantilan Area</li>
+            </ul>
+            <p><strong>How to Apply:</strong><br>Send your resume and portfolio to <a href="mailto:careers@labhatud.com" style="color: var(--teal);">careers@labhatud.com</a></p>
+            <p><strong>Why Join Us?</strong></p>
+            <ul>
+                <li>Competitive salary and benefits</li>
+                <li>Flexible work arrangements</li>
+                <li>Growth opportunities</li>
+                <li>Be part of an innovative tech startup</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Blog Modal -->
+<div class="footer-modal-overlay" id="blogModal">
+    <div class="footer-modal">
+        <div class="footer-modal-header">
+            <h3>📝 Blog & News</h3>
+            <button class="footer-modal-close" onclick="closeModal('blogModal')">×</button>
+        </div>
+        <div class="footer-modal-body">
+            <p>Stay updated with the latest news, tips, and announcements from LabHatud.</p>
+            <p><strong>Latest Articles:</strong></p>
+            <ul>
+                <li>🎉 <strong>LabHatud Launches in Cantilan!</strong> - January 2026</li>
+                <li>🧺 <strong>5 Laundry Care Tips for Students</strong> - December 2025</li>
+                <li>🌿 <strong>Eco-Friendly Laundry: Our Commitment</strong> - November 2025</li>
+                <li>📱 <strong>New App Features: What's New</strong> - October 2025</li>
+            </ul>
+            <p><strong>Subscribe to our newsletter:</strong><br>Get updates delivered to your inbox. <a href="#" style="color: var(--teal);" onclick="alert('Newsletter subscription feature coming soon!'); return false;">Subscribe →</a></p>
+            <p>Follow us on social media for real-time updates!</p>
+        </div>
+    </div>
+</div>
+
+<!-- Press Modal -->
+<div class="footer-modal-overlay" id="pressModal">
+    <div class="footer-modal">
+        <div class="footer-modal-header">
+            <h3>📰 Press & Media</h3>
+            <button class="footer-modal-close" onclick="closeModal('pressModal')">×</button>
+        </div>
+        <div class="footer-modal-body">
+            <p><strong>Media Inquiries:</strong><br>Contact our press team at <a href="mailto:press@labhatud.com" style="color: var(--teal);">press@labhatud.com</a></p>
+            <p><strong>Press Releases:</strong></p>
+            <ul>
+                <li>📄 <strong>LabHatud Launches Smart Laundry Ecosystem in Cantilan</strong> - January 2026</li>
+                <li>🤝 <strong>LabHatud Partners with Local Laundry Shops</strong> - December 2025</li>
+                <li>🏆 <strong>LabHatud Recognized as Top Startup</strong> - November 2025</li>
+            </ul>
+            <p><strong>Media Kit:</strong><br>Download our logo, screenshots, and brand guidelines. <a href="#" style="color: var(--teal);" onclick="alert('Media kit download coming soon!'); return false;">Download →</a></p>
+            <p><strong>In the News:</strong><br>Feature requests and interview scheduling available upon request.</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>
