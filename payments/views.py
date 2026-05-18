@@ -183,18 +183,26 @@ def paymongo_webhook(request):
     
 
 def gcash_checkout_view(request):
-    """Handle GCash payment initiation"""
+    """Handle GCash payment initiation - MOCK MODE for demo"""
     if request.method == "POST":
         description = request.POST.get("description", "LabHatud Laundry Order")
         amount_pesos = float(request.POST.get("amount", 0))
         amount_centavos = int(amount_pesos * 100)
         
-        # FIX: Check minimum amount for GCash
-        if amount_pesos < 100:
-            messages.error(request, "Minimum amount for GCash payment is ₱100.00")
-            return redirect("checkout")
+        # Get expected amount from session
+        payment_data = request.session.get('gcash_payment_data', {})
+        expected_amount = float(payment_data.get('amount', 0))
         
-        # FIX: Create order FIRST to have reference
+        # Validate exact amount
+        if abs(amount_pesos - expected_amount) > 0.01:  # Allow 1 cent tolerance for rounding
+            messages.error(request, f"Payment amount must be exactly ₱{expected_amount:.2f}. You entered ₱{amount_pesos:.2f}")
+            context = {
+                'amount': payment_data.get('amount', '100.00'),
+                'description': payment_data.get('description', 'LabHatud Laundry Order'),
+            }
+            return render(request, "payments/gcash_checkout.html", context)
+        
+        # Create order
         order = Order.objects.create(
             description=description,
             amount=amount_centavos,
@@ -203,33 +211,26 @@ def gcash_checkout_view(request):
         
         # Build redirect URLs
         base_url = request.build_absolute_uri("/")
-        # FIX: Include order_id in callback URLs
         success_url = base_url + f"payments/gcash/callback/?order_id={order.pk}&status=success"
         failed_url = base_url + f"payments/gcash/callback/?order_id={order.pk}&status=failed"
         
-        try:
-            # Create GCash source
-            source_data = create_gcash_source(
-                amount=amount_centavos,
-                description=description,
-                success_url=success_url,
-                failed_url=failed_url
-            )
-            
-            # FIX: Store source_id in order (requires model field)
-            order.paymongo_source_id = source_data["source_id"]
-            order.checkout_url = source_data["checkout_url"]
-            order.save()
-            
-            # Redirect customer to GCash checkout page
-            return redirect(source_data["checkout_url"])
-            
-        except Exception as e:
-            logger.error(f"GCash payment error: {str(e)}")
-            messages.error(request, f"GCash payment error: {str(e)}")
-            return redirect("checkout")
+        # MOCK MODE: Show simulated GCash page instead of real PayMongo
+        context = {
+            'order': order,
+            'amount': f"{amount_pesos:.2f}",
+            'description': description,
+            'success_url': success_url,
+            'failed_url': failed_url,
+        }
+        return render(request, "payments/mock_gcash.html", context)
     
-    return render(request, "payments/gcash_checkout.html")
+    # GET request - show form with pre-filled data from session
+    payment_data = request.session.get('gcash_payment_data', {})
+    context = {
+        'amount': payment_data.get('amount', '100.00'),
+        'description': payment_data.get('description', 'LabHatud Laundry Order'),
+    }
+    return render(request, "payments/gcash_checkout.html", context)
 
 
 def gcash_callback_view(request):
@@ -237,14 +238,20 @@ def gcash_callback_view(request):
     order_id = request.GET.get("order_id")
     status = request.GET.get("status")
     
+    logger.info(f"=== GCASH CALLBACK ===")
+    logger.info(f"Order ID: {order_id}, Status: {status}")
+    
     # Get the pending booking data from session
     pending_booking = request.session.get('pending_booking', {})
+    logger.info(f"pending_booking from session: {pending_booking}")
     
     if status == "success" and order_id:
         try:
             order = Order.objects.get(pk=order_id)
             order.status = "paid"
             order.save()
+            
+            logger.info(f"Payment Order {order_id} marked as paid")
             
             # Store payment success in session for frontend to read
             request.session['payment_success'] = True
@@ -253,10 +260,14 @@ def gcash_callback_view(request):
             # Keep the booking data if it exists
             if pending_booking:
                 request.session['pending_booking'] = pending_booking
+                logger.info(f"Kept pending_booking in session for order creation")
+            else:
+                logger.warning(f"No pending_booking found in session!")
             
         except Order.DoesNotExist:
-            pass
+            logger.error(f"Payment Order {order_id} not found!")
     
+    logger.info(f"Redirecting to /student-home/?payment=success&tab=booking")
     # CHANGE THIS LINE - redirect to student-home instead of root
     return redirect(f"/student-home/?payment=success&tab=booking")
 
@@ -266,19 +277,25 @@ def payment_page_view(request):
     # Get pending_booking from URL parameter
     pending_booking_param = request.GET.get('pending_booking')
     
+    logger.info(f"=== PAYMENT PAGE VIEW ===")
+    logger.info(f"pending_booking_param received: {pending_booking_param[:100] if pending_booking_param else 'None'}...")
+    
     if pending_booking_param:
         import json
         try:
             booking_data = json.loads(pending_booking_param)
             # Store in session for later use
             request.session['pending_booking'] = booking_data
-        except:
-            pass
+            logger.info(f"Stored booking_data in session: {booking_data}")
+        except Exception as e:
+            logger.error(f"Failed to parse pending_booking: {e}")
     
     # Get payment method from URL
     payment_method = request.GET.get('payment_method', '').lower()
     amount = request.GET.get('amount', '0')
     description = request.GET.get('description', 'LabHatud Laundry Order')
+    
+    logger.info(f"Payment method: {payment_method}, Amount: {amount}")
     
     # If payment method is GCash, redirect to GCash checkout
     if payment_method == 'gcash':
@@ -288,6 +305,7 @@ def payment_page_view(request):
             'description': description,
             'payment_method': payment_method
         }
+        logger.info(f"Redirecting to gcash_checkout with session data")
         return redirect('gcash_checkout')
     
     # For other payment methods, show the regular checkout page

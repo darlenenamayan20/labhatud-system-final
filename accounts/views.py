@@ -339,8 +339,9 @@ def rider_dashboard(request):
     import json
     
     # Get pending orders that are ready but have NO rider assigned yet
+    # Only show 'ready' orders - not 'accepted' (those are still being processed by shop)
     pending_orders = Order.objects.filter(
-        status__in=['ready', 'accepted'],
+        status='ready',
         rider__isnull=True
     ).select_related('customer', 'shop').order_by('-created_at')
     
@@ -1137,7 +1138,7 @@ def shop_dashboard(request):
         # PRODUCTION orders (currently being washed/dried OR picked up by rider)
         production_orders = Order.objects.filter(
             shop=shop, 
-            status__in=['washing', 'drying', 'picked_up', 'rider_accepted']
+            status__in=['accepted', 'washing', 'drying', 'picked_up', 'rider_accepted']
         ).order_by('-created_at')
         
         # READY orders (ready for pickup by rider)
@@ -1486,10 +1487,10 @@ def rider_accept_order_api(request, order_id):
     from .models import Order
     
     try:
-        # Allow accepting orders that are 'ready' OR 'accepted' with no rider assigned
+        # Only allow accepting orders that are 'ready' (shop has finished processing)
         order = Order.objects.get(
             id=order_id, 
-            status__in=['ready', 'accepted'], 
+            status='ready', 
             rider__isnull=True
         )
         
@@ -1524,6 +1525,12 @@ def rider_accept_order_api(request, order_id):
 @csrf_exempt
 def create_booking_api(request):
     """API endpoint to create a new laundry booking - WAITING FOR SHOP APPROVAL"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"=== CREATE BOOKING API ===")
+    logger.info(f"User: {request.user.username}")
+    
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=400)
     
@@ -1531,7 +1538,10 @@ def create_booking_api(request):
     
     try:
         data = json.loads(request.body)
+        logger.info(f"Booking data received: {data}")
+        
         shop = LaundryShop.objects.get(id=data.get('shop_id'))
+        logger.info(f"Shop found: {shop.shop_name} (ID: {shop.id})")
         
         service = ShopService.objects.get(shop=shop, service_type=data.get('service_type'))
         weight = float(data.get('weight'))
@@ -1551,6 +1561,8 @@ def create_booking_api(request):
             status='pending'
         )
         
+        logger.info(f"Order created: {order.order_number} for shop {shop.shop_name}")
+        
         # Notify shop owner
         create_notification(
             user=shop.owner,
@@ -1559,6 +1571,8 @@ def create_booking_api(request):
             message=f'New order #{order.order_number} from {request.user.get_full_name() or request.user.username}. Please review and accept/reject.',
             order=order
         )
+        
+        logger.info(f"Notification sent to shop owner: {shop.owner.username}")
         
         # Notify customer
         create_notification(
@@ -1574,6 +1588,74 @@ def create_booking_api(request):
             'message': 'Booking created successfully! Waiting for shop approval.',
             'order_number': order.order_number,
             'status': 'pending_shop_approval'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error creating booking: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+
+
+@login_required
+@login_required
+@csrf_exempt
+def update_profile_api(request):
+    """API endpoint to update user profile"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=400)
+    
+    try:
+        data = json.loads(request.body)
+        user = request.user
+        
+        user.first_name = data.get('first_name', user.first_name)
+        user.last_name = data.get('last_name', user.last_name)
+        user.email = data.get('email', user.email)
+        user.phone = data.get('phone', user.phone)
+        user.address = data.get('address', user.address)
+        
+        user.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Profile updated successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@login_required
+@csrf_exempt
+def change_password_api(request):
+    """API endpoint to change user password"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=400)
+    
+    from django.contrib.auth import update_session_auth_hash
+    
+    try:
+        data = json.loads(request.body)
+        user = request.user
+        
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+        
+        # Verify current password
+        if not user.check_password(current_password):
+            return JsonResponse({'success': False, 'message': 'Current password is incorrect'}, status=400)
+        
+        # Set new password
+        user.set_password(new_password)
+        user.save()
+        
+        # Keep user logged in after password change
+        update_session_auth_hash(request, user)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Password changed successfully'
         })
         
     except Exception as e:
@@ -3431,10 +3513,19 @@ def get_pending_booking_api(request):
     API endpoint to get pending booking data from session.
     Called by student_home.html after payment success.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"=== GET PENDING BOOKING API ===")
+    
     # Retrieve the booking data stored in the session
     pending_booking = request.session.get('pending_booking')
     payment_success = request.session.get('payment_success', False)
     payment_order_id = request.session.get('payment_order_id')
+    
+    logger.info(f"pending_booking: {pending_booking}")
+    logger.info(f"payment_success: {payment_success}")
+    logger.info(f"payment_order_id: {payment_order_id}")
     
     if pending_booking and payment_success:
         response_data = {
