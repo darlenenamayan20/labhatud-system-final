@@ -11,231 +11,78 @@
             box-sizing: border-box;
         }
         
-        :root {
-            --charcoal: #1A1A2E;
-            --teal: #00C2A8;
-            --white: #FFFFFF;
-        }
-        
         body {
             font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--charcoal);
+            background: linear-gradient(135deg, #0D4F3C 0%, #00695C 50%, #00C2A8 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 15px;
             display: flex;
-            flex-direction: column;
-        }
-        
-        .header {
-            text-align: center;
-            color: white;
-            padding: 20px 0 30px;
-        }
-        
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
+            align-items: center;
+            justify-content: center;
         }
         
         .close-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
+            position: fixed;
+            top: 15px;
+            left: 15px;
             color: white;
-            font-size: 32px;
+            font-size: 28px;
             text-decoration: none;
             cursor: pointer;
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 8px;
             transition: background 0.3s;
+            z-index: 10;
         }
         
         .close-btn:hover {
             background: rgba(255, 255, 255, 0.1);
         }
         
+        .receipt-container {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            padding: 0 0 20px;
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
         .receipt {
             background: white;
-            max-width: 500px;
-            margin: 0 auto;
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             overflow: hidden;
         }
         
         .receipt-content {
-            padding: 40px 30px 30px;
+            padding: 25px 20px 20px;
         }
         
         .status-header {
             text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .status-title {
-            color: #666;
-            font-size: 18px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            font-weight: 500;
-        }
-        
-        .share-icon {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #666;
-            border-radius: 4px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .share-icon:hover {
-            background: #f0f0f0;
-        }
-        
-        .merchant-avatar {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--teal), #00a896);
-            border-radius: 50%;
-            margin: 0 auto 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            color: white;
-            font-weight: 600;
-        }
-        
-        .merchant-name {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-        
-        .amount {
-            font-size: 42px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .payment-method {
-            color: #999;
-            font-size: 14px;
-        }
-        
-        .details {
-            margin-top: 30px;
-            border-top: 1px solid #f0f0f0;
-            padding-top: 20px;
-        }
-        
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            font-size: 14px;
-        }
-        
-        .detail-label {
-            color: #999;
-        }
-        
-        .detail-value {
-            color: #333;
-            font-weight: 500;
-            text-align: right;
-            max-width: 60%;
-            word-break: break-word;
-        }
-        
-        .reference {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #f0f0f0;
-        }
-        
-        .ref-number {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        
-        .ref-date {
-            color: #999;
-            font-size: 13px;
             margin-bottom: 20px;
         }
-        
-        .notice {
-            color: #999;
-            font-size: 12px;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f9f9f9;
-            border-radius: 8px;
-        }
-        
-        .action-btn {
-            display: block;
-            width: 100%;
-            padding: 14px;
-            margin: 10px 0;
-            border: none;
-            background: var(--teal);
-            color: white;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            text-align: center;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-        
-        .action-btn:hover {
-            background: #00a896;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 194, 168, 0.3);
-        }
-        
-        .action-btn.secondary {
-            background: transparent;
-            color: var(--teal);
-            border: 2px solid var(--teal);
-        }
-        
-        .action-btn.secondary:hover {
-            background: var(--teal);
-            color: white;
-        }
-        
-        .status-success { color: #4CAF50; }
-        .status-pending { color: #FF9800; }
-        .status-failed { color: #F44336; }
         
         .status-badge {
             display: inline-block;
-            padding: 6px 16px;
+            padding: 5px 14px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         
         .status-badge.success {
@@ -252,84 +99,204 @@
             background: #ffebee;
             color: #F44336;
         }
+        
+        .merchant-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00C2A8, #00a896);
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .merchant-name {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .amount {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .payment-method {
+            color: #999;
+            font-size: 13px;
+        }
+        
+        .details {
+            margin-top: 20px;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 15px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+        }
+        
+        .detail-label {
+            color: #999;
+        }
+        
+        .detail-value {
+            color: #333;
+            font-weight: 500;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-word;
+        }
+        
+        .reference {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .ref-date {
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .notice {
+            color: #666;
+            font-size: 11px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+        }
+        
+        .action-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: none;
+            background: #00C2A8;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            background: #00a896;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 194, 168, 0.3);
+        }
+        
+        .action-btn.secondary {
+            background: transparent;
+            color: #00C2A8;
+            border: 2px solid #00C2A8;
+        }
+        
+        .action-btn.secondary:hover {
+            background: #00C2A8;
+            color: white;
+        }
+        
+        .status-success { color: #4CAF50; }
+        .status-pending { color: #FF9800; }
+        .status-failed { color: #F44336; }
     </style>
 </head>
 <body>
     <a href="/student-home/" class="close-btn">✕</a>
     
-    <div class="header">
-        <h1>Payment Receipt</h1>
-    </div>
+    <div class="receipt-container">
+        <div class="header">
+            <h1>Payment Receipt</h1>
+        </div>
 
-    <div class="receipt">
-        <div class="receipt-content">
-            <div class="status-header">
-                {% if order.status == "paid" %}
-                    <div class="status-badge success">✓ Payment Received</div>
-                {% elif order.status == "failed" %}
-                    <div class="status-badge failed">✗ Payment Failed</div>
-                {% else %}
-                    <div class="status-badge pending">⏳ Payment Pending</div>
-                {% endif %}
-                
-                <div class="merchant-avatar">L</div>
-                <div class="merchant-name">LabHatud Laundry</div>
-                <div class="amount">PHP {{ order.amount_in_pesos }}</div>
-                <div class="payment-method">using your GCash</div>
-            </div>
+        <div class="receipt">
+            <div class="receipt-content">
+                <div class="status-header">
+                    {% if order.status == "paid" %}
+                        <div class="status-badge success">✓ Payment Received</div>
+                    {% elif order.status == "failed" %}
+                        <div class="status-badge failed">✗ Payment Failed</div>
+                    {% else %}
+                        <div class="status-badge pending">⏳ Payment Pending</div>
+                    {% endif %}
+                    
+                    <div class="merchant-avatar">L</div>
+                    <div class="merchant-name">LabHatud Laundry</div>
+                    <div class="amount">PHP {{ order.amount_in_pesos }}</div>
+                    <div class="payment-method">using your GCash</div>
+                </div>
 
-            <div class="details">
-                <div class="detail-row">
-                    <span class="detail-label">Amount Paid</span>
-                    <span class="detail-value">PHP {{ order.amount_in_pesos }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Reference Number</span>
-                    <span class="detail-value">{{ order.pk }}{{ order.paymongo_link_id|slice:":8"|default:"" }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Transaction Fee</span>
-                    <span class="detail-value">PHP 0.00</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Description</span>
-                    <span class="detail-value">{{ order.description }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Status</span>
-                    <span class="detail-value">
-                        {% if order.status == "paid" %}
-                            <span class="status-success">Paid</span>
-                        {% elif order.status == "failed" %}
-                            <span class="status-failed">Failed</span>
-                        {% else %}
-                            <span class="status-pending">Pending</span>
-                        {% endif %}
-                    </span>
-                </div>
-            </div>
-
-            <div class="reference">
-                <div class="ref-date">{{ order.created_at|date:"F d, Y - h:i A" }}</div>
-                
-                {% if order.status == "paid" %}
-                    <div class="notice">
-                        ✓ Payment successful! Your transaction has been processed. You can now proceed with your laundry booking.
+                <div class="details">
+                    <div class="detail-row">
+                        <span class="detail-label">Amount Paid</span>
+                        <span class="detail-value">PHP {{ order.amount_in_pesos }}</span>
                     </div>
-                {% elif order.status == "pending" %}
-                    <div class="notice">
-                        ⏳ Your payment is being processed. This usually takes a few moments. Please check back shortly.
+                    <div class="detail-row">
+                        <span class="detail-label">Reference Number</span>
+                        <span class="detail-value">{{ order.pk }}{{ order.paymongo_link_id|slice:":8"|default:"" }}</span>
                     </div>
-                {% else %}
-                    <div class="notice">
-                        ✗ Payment failed. Please try again or contact support if the problem persists.
+                    <div class="detail-row">
+                        <span class="detail-label">Transaction Fee</span>
+                        <span class="detail-value">PHP 0.00</span>
                     </div>
-                {% endif %}
+                    <div class="detail-row">
+                        <span class="detail-label">Description</span>
+                        <span class="detail-value">{{ order.description }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value">
+                            {% if order.status == "paid" %}
+                                <span class="status-success">Paid</span>
+                            {% elif order.status == "failed" %}
+                                <span class="status-failed">Failed</span>
+                            {% else %}
+                                <span class="status-pending">Pending</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
 
-                <a href="/student-home/" class="action-btn">Back to Home</a>
-                {% if order.status == "failed" %}
-                    <a href="{% url 'gcash_checkout' %}" class="action-btn secondary">Try Again</a>
-                {% endif %}
+                <div class="reference">
+                    <div class="ref-date">{{ order.created_at|date:"F d, Y - h:i A" }}</div>
+                    
+                    {% if order.status == "paid" %}
+                        <div class="notice">
+                            ✓ Payment successful! Your transaction has been processed.
+                        </div>
+                    {% elif order.status == "pending" %}
+                        <div class="notice">
+                            ⏳ Your payment is being processed. Please check back shortly.
+                        </div>
+                    {% else %}
+                        <div class="notice">
+                            ✗ Payment failed. Please try again or contact support.
+                        </div>
+                    {% endif %}
+
+                    <a href="/student-home/" class="action-btn">Back to Home</a>
+                    {% if order.status == "failed" %}
+                        <a href="{% url 'gcash_checkout' %}" class="action-btn secondary">Try Again</a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
