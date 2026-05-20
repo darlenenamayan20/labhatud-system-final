@@ -174,7 +174,7 @@ def paymongo_webhook(request):
     
 
 def gcash_checkout_view(request):
-    """Handle GCash payment initiation - Redirect to real PayMongo GCash checkout"""
+    """Handle GCash payment initiation - Show custom form and receipt"""
     if request.method == "POST":
         description = request.POST.get("description", "LabHatud Laundry Order")
         amount_pesos = float(request.POST.get("amount", 0))
@@ -187,50 +187,24 @@ def gcash_checkout_view(request):
                 'description': description
             })
         
-        # Create order first
+        # Create order and mark as paid immediately
         order = Order.objects.create(
             description=description,
             amount=amount_centavos,
-            status="pending",
+            status="paid",
         )
         
-        # Build callback URLs
-        success_url = request.build_absolute_uri(
-            reverse("gcash_callback") + f"?order_id={order.pk}&status=success"
-        )
-        failed_url = request.build_absolute_uri(
-            reverse("gcash_callback") + f"?order_id={order.pk}&status=failed"
-        )
+        # Store payment success in session
+        request.session['payment_success'] = True
+        request.session['payment_order_id'] = order.pk
         
-        try:
-            # Create GCash source - This redirects to REAL PayMongo GCash checkout
-            source_data = create_gcash_source(
-                amount=amount_centavos,
-                description=description,
-                success_url=success_url,
-                failed_url=failed_url
-            )
-            
-            # Store source ID in order
-            order.paymongo_source_id = source_data["source_id"]
-            order.checkout_url = source_data["checkout_url"]
-            order.save()
-            
-            # Preserve pending booking in session
-            pending_booking = request.session.get('pending_booking')
-            if pending_booking:
-                request.session['pending_booking'] = pending_booking
-            
-            # Redirect to PayMongo's real GCash checkout page
-            return redirect(source_data["checkout_url"])
-            
-        except Exception as e:
-            logger.error(f"GCash source creation failed: {str(e)}")
-            messages.error(request, f"Payment initialization failed: {str(e)}")
-            return render(request, "payments/gcash_checkout.html", {
-                'amount': amount_pesos,
-                'description': description
-            })
+        # Preserve pending booking in session
+        pending_booking = request.session.get('pending_booking')
+        if pending_booking:
+            request.session['pending_booking'] = pending_booking
+        
+        # Show receipt
+        return redirect('payment_result', order_id=order.pk)
     
     gcash_data = request.session.get('gcash_payment_data', {})
     amount = gcash_data.get('amount', '100.00')
@@ -244,41 +218,27 @@ def gcash_checkout_view(request):
 
 
 def gcash_callback_view(request):
-    """Callback after GCash payment - Handles real PayMongo response"""
+    """Callback after GCash payment - Redirects back to student home"""
     order_id = request.GET.get("order_id")
     status = request.GET.get("status")
     
-    # Get the pending booking data from session
     pending_booking = request.session.get('pending_booking', {})
     
     if status == "success" and order_id:
         try:
             order = Order.objects.get(pk=order_id)
-            # Don't mark as paid yet - wait for webhook confirmation
-            # The webhook will mark it as paid when source.chargeable event arrives
+            order.status = "paid"
+            order.save()
             
-            # Store payment success in session for frontend to read
             request.session['payment_success'] = True
             request.session['payment_order_id'] = order_id
             
-            # Keep the booking data if it exists
             if pending_booking:
                 request.session['pending_booking'] = pending_booking
             
-            logger.info(f"GCash payment success for order {order_id}, waiting for webhook confirmation")
-            
-        except Order.DoesNotExist:
-            logger.error(f"Order {order_id} not found in callback")
-    elif status == "failed":
-        try:
-            order = Order.objects.get(pk=order_id)
-            order.status = "failed"
-            order.save()
-            logger.info(f"GCash payment failed for order {order_id}")
         except Order.DoesNotExist:
             pass
     
-    # Redirect to student-home with payment status
     return redirect(f"/student-home/?payment={status}")
 
 def payment_page_view(request):
