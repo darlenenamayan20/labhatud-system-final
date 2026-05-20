@@ -197,16 +197,13 @@ def gcash_checkout_view(request):
         request.session['payment_success'] = True
         request.session['payment_order_id'] = order.pk
         
-        # Check if there's a pending booking and preserve it
+        # Preserve pending booking in session
         pending_booking = request.session.get('pending_booking')
         if pending_booking:
-            # Keep the booking data in session
             request.session['pending_booking'] = pending_booking
-            # Redirect to student home with payment success
-            return redirect('/student-home/?payment=success&tab=booking')
-        else:
-            # No booking, just show receipt
-            return redirect('payment_result', order_id=order.pk)
+        
+        # Show receipt first
+        return redirect('payment_result', order_id=order.pk)
     
     gcash_data = request.session.get('gcash_payment_data', {})
     amount = gcash_data.get('amount', '100.00')

@@ -288,7 +288,7 @@
                         </div>
                     {% endif %}
 
-                    <a href="/student-home/" class="action-btn">Back to Home</a>
+                    <a href="/student-home/?payment=success" class="action-btn">Back to Home</a>
                     {% if order.status == "failed" %}
                         <a href="{% url 'gcash_checkout' %}" class="action-btn secondary">Try Again</a>
                     {% endif %}
