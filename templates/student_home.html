@@ -1387,26 +1387,29 @@
         }
     }
 
-    function updateSummary() {
+    async function updateSummary() {
     const w = parseFloat(document.getElementById('bk_weight').value) || 0;
-    document.getElementById('sum_weight').textContent = w > 0 ? w + ' kg' : '—';
+    document.getElementById('sum_weight').textContent = w > 0 ? w + ' kg' : '';
     
-    if (currentShopId && w > 0 && selectedType) {
-        fetch(`/api/shop/${currentShopId}/details/`)
-            .then(response => response.json())
-            .then(shop => {
-                // Find the price for the SELECTED service type, not always the first one
-                const selectedService = shop.services?.find(s => s.name === selectedType);
-                const rate = selectedService?.price || 50;
-                document.getElementById('sum_rate').textContent = `₱ ${rate}/kg`;
-                document.getElementById('sum_total').textContent = w > 0 ? '₱ ' + (w * rate).toFixed(2) : '—';
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('sum_total').textContent = w > 0 ? '₱ ' + (w * 50).toFixed(2) : '—';
-            });
+    if (currentShopId && selectedType) {
+        try {
+            const response = await fetch(`/api/shop/${currentShopId}/details/`);
+            const shop = await response.json();
+            
+            // Find the price for the SELECTED service type
+            const selectedService = shop.services?.find(s => s.name === selectedType);
+            const rate = selectedService?.price || 60;
+            
+            document.getElementById('sum_rate').textContent = `₱ ${rate}/kg`;
+            document.getElementById('sum_total').textContent = w > 0 ? '₱ ' + (w * rate).toFixed(2) : '₱ 0.00';
+        } catch (error) {
+            console.error('Error fetching shop details:', error);
+            document.getElementById('sum_rate').textContent = '';
+            document.getElementById('sum_total').textContent = '₱ 0.00';
+        }
     } else {
-        document.getElementById('sum_total').textContent = w > 0 ? '₱ ' + (w * 50).toFixed(2) : '—';
+        document.getElementById('sum_rate').textContent = '';
+        document.getElementById('sum_total').textContent = '₱ 0.00';
     }
 }
 
@@ -1422,13 +1425,13 @@
     }
 
     // Calculate total amount based on SELECTED service type
-    let rate = 50;
+    let rate = 60;
     try {
         const shopResponse = await fetch(`/api/shop/${currentShopId}/details/`);
         const shop = await shopResponse.json();
         // Find the price for the SELECTED service type
         const selectedService = shop.services?.find(s => s.name === selectedType);
-        rate = selectedService?.price || 50;
+        rate = selectedService?.price || 60;
     } catch(e) { console.log('Using default rate'); }
     
     const totalAmount = parseFloat(w) * rate;
@@ -1840,7 +1843,7 @@
             document.getElementById('sum_weight').textContent = weightNum + ' kg';
             
             // Find the price for the specific service type being reordered
-            const rate = shop.services?.find(s => s.name === displayType)?.price || 50;
+            const rate = shop.services?.find(s => s.name === displayType)?.price || 60;
             const total = weightNum * rate;
             document.getElementById('sum_rate').textContent = `₱ ${rate}/kg`;
             document.getElementById('sum_total').textContent = `₱ ${total.toFixed(2)}`;
