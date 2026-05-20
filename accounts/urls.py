@@ -13,7 +13,9 @@ from .views import (
     update_rider_profile,
     update_rider_vehicle,
     get_pending_booking_api,
-    create_review_api,  # ADD THIS LINE
+    create_review_api,
+    update_profile_api,
+    change_password_api,
 )
 
 urlpatterns = [
@@ -47,5 +49,7 @@ urlpatterns = [
     # API endpoints (clean and organized)
     path('api/', include('accounts.api_urls')),
     path('api/get-pending-booking/', get_pending_booking_api, name='get_pending_booking'),
+    path('api/update-profile/', update_profile_api, name='update_profile_api'),
+    path('api/change-password/', change_password_api, name='change_password_api'),
     path('create-review/', create_review_api, name='create_review'),  # USE THE FUNCTION DIRECTLY
 ]

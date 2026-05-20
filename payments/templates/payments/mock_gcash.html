@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCash</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(140deg, #0D1B2A 0%, #0D4F3C 40%, #00695C 70%, #004D40 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .receipt-container {
+            background: transparent;
+            max-width: 400px;
+            width: 100%;
+            padding: 40px 20px;
+        }
+        .receipt {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 40px 30px 30px;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .checkmark {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background: #0066FF;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 5px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .checkmark svg {
+            width: 30px;
+            height: 30px;
+            stroke: white;
+            stroke-width: 3;
+            fill: none;
+        }
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        .sent-via {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+        .receipt-body {
+            margin-bottom: 25px;
+        }
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .receipt-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+        .value {
+            font-size: 14px;
+            color: #1a1a1a;
+            font-weight: 600;
+            text-align: right;
+        }
+        .total-row {
+            padding: 20px 0;
+            border-top: 2px solid #e5e5e5;
+            margin-top: 10px;
+        }
+        .total-label {
+            font-size: 15px;
+            color: #333;
+            font-weight: 600;
+        }
+        .total-value {
+            font-size: 24px;
+            color: #0066FF;
+            font-weight: bold;
+        }
+        .receipt-footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #e5e5e5;
+        }
+        .ref-number {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 3px;
+        }
+        .ref-value {
+            font-size: 13px;
+            color: #666;
+            font-weight: 600;
+        }
+        .date {
+            font-size: 12px;
+            color: #999;
+            margin-top: 3px;
+        }
+        .receipt-bottom {
+            height: 30px;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .receipt-bottom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -10px;
+            right: -10px;
+            height: 30px;
+            background: 
+                radial-gradient(circle at 10px 0, transparent 10px, white 10px) repeat-x;
+            background-size: 20px 30px;
+        }
+        .button-group {
+            margin-top: 30px;
+            display: flex;
+            gap: 12px;
+        }
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-confirm {
+            background: white;
+            color: #0066FF;
+            box-shadow: 0 4px 12px rgba(255,255,255,0.3);
+        }
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255,255,255,0.4);
+        }
+        .btn-cancel {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+        .btn-cancel:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <div class="receipt">
+            <div class="checkmark">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            
+            <div class="receipt-header">
+                <div class="sent-via">Sent via GCash</div>
+            </div>
+            
+            <div class="receipt-body">
+                <div class="receipt-row">
+                    <span class="label">To</span>
+                    <span class="value">LabHatud Laundry</span>
+                </div>
+                
+                <div class="receipt-row">
+                    <span class="label">Amount</span>
+                    <span class="value">{{ amount }}</span>
+                </div>
+                
+                <div class="receipt-row total-row">
+                    <span class="total-label">Total Amount Sent</span>
+                    <span class="total-value">₱{{ amount }}</span>
+                </div>
+            </div>
+            
+            <div class="receipt-footer">
+                <div class="ref-number">Ref No.</div>
+                <div class="ref-value" id="ref-number"></div>
+                <div class="date" id="date-time"></div>
+            </div>
+        </div>
+        
+        <div class="receipt-bottom"></div>
+        
+        <div class="button-group">
+            <button class="btn btn-confirm" onclick="authorizePayment()">
+                Confirm Payment
+            </button>
+            <button class="btn btn-cancel" onclick="failPayment()">
+                Cancel
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // Generate reference number
+        const refNum = '2012 120 ' + Math.floor(Math.random() * 900000 + 100000);
+        document.getElementById('ref-number').textContent = refNum;
+        
+        // Set current date and time
+        const now = new Date();
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const dateStr = months[now.getMonth()] + ' ' + now.getDate() + ' ' + now.getFullYear() + ' ' + 
+                       now.getHours().toString().padStart(2, '0') + ':' + 
+                       now.getMinutes().toString().padStart(2, '0') + ' ' +
+                       (now.getHours() >= 12 ? 'pm' : 'am');
+        document.getElementById('date-time').textContent = dateStr;
+        
+        function authorizePayment() {
+            window.location.href = "{{ success_url }}";
+        }
+        
+        function failPayment() {
+            window.location.href = "{{ failed_url }}";
+        }
+    </script>
+</body>
+</html>
