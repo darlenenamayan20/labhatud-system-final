@@ -1260,3 +1260,14 @@ footer { background: var(--text); color: rgba(255,255,255,0.75); padding: 40px 3
     color: var(--teal);
 }
 
+.status-option.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg2);
+}
+
+.order-status.status-waiting {
+    background: rgba(245,168,35,0.13);
+    color: var(--warning);
+    animation: pulse 2s infinite;
+}

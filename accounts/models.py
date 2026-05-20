@@ -140,9 +140,11 @@ class Order(models.Model):
         ('accepted', 'Accepted'),
         ('rider_accepted', 'Rider Accepted'),
         ('picked_up', 'Picked Up'),
+        ('delivered_to_shop', 'Delivered to Shop'),  # ← ADD THIS
         ('washing', 'Washing'),
         ('drying', 'Drying'),
         ('ready', 'Ready for Delivery'),
+        ('picked_up_from_shop', 'Picked Up from Shop'),  # ← ADD THIS
         ('out_for_delivery', 'Out for Delivery'),
         ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),
@@ -177,12 +179,14 @@ class Order(models.Model):
     delivered_at = models.DateTimeField(null=True, blank=True)
     
     # Status Tracking
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='pending')  # ← Increased max_length to 25
     status_updated_at = models.DateTimeField(auto_now=True)
     
     # Timestamps for shop and rider progress tracking
     ready_at = models.DateTimeField(null=True, blank=True)  # When shop marks order as 'ready'
-    picked_up_at = models.DateTimeField(null=True, blank=True)  # When rider picks up the order
+    picked_up_at = models.DateTimeField(null=True, blank=True)  # When rider picks up dirty laundry from customer
+    delivered_to_shop_at = models.DateTimeField(null=True, blank=True)  # ← ADD THIS - When rider delivers dirty laundry to shop
+    picked_up_from_shop_at = models.DateTimeField(null=True, blank=True)  # ← ADD THIS - When rider picks up clean laundry from shop
     out_for_delivery_at = models.DateTimeField(null=True, blank=True)  # When order is out for delivery
     
     # Timestamps

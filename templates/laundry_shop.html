@@ -254,57 +254,77 @@
             </div>
 
             <!-- PRODUCTION SECTION (Being Washed/Dried) -->
-            <div class="section-header" style="margin-top:40px;">
-                <div>
-                    <h2 class="section-title">In Production</h2>
-                    <div class="section-subtitle">Orders currently being processed or picked up</div>
-                </div>
-            </div>
+<div class="section-header" style="margin-top:40px;">
+    <div>
+        <h2 class="section-title">In Production</h2>
+        <div class="section-subtitle">Orders currently being processed</div>
+    </div>
+</div>
 
-            <div class="orders-grid" id="productionOrdersGrid">
-                {% for order in production_orders %}
-                <div class="order-card" data-order-id="{{ order.id }}">
-                    <div class="order-header">
-                        <span class="order-number">{{ order.order_number }}</span>
-                        <span class="order-status status-processing">{{ order.get_status_display }}</span>
-                    </div>
-                    <div class="order-customer">
-                        <div class="cust-avatar">{{ order.customer.first_name|first|default:"C" }}</div>
-                        <div>
-                            <div class="cust-name">{{ order.customer.get_full_name|default:order.customer.username }}</div>
-                            <div class="cust-phone">
-                                {% if order.rider %}
-                                🛵 Rider: {{ order.rider.get_full_name|default:order.rider.username }}
-                                {% else %}
-                                👤 Rider: Not assigned yet
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="order-details">
-                        <p><span>⚖️</span> {{ order.weight|floatformat:0 }}kg — {{ order.get_service_type_display }}</p>
-                        <p><span>⏰</span> Order placed {{ order.created_at|timesince }} ago</p>
-                        {% if order.status == 'picked_up' %}
-                        <p><span>📦</span> Rider has picked up the order - in transit to shop</p>
-                        {% elif order.status == 'rider_accepted' %}
-                        <p><span>🛵</span> Rider has accepted - heading to pickup</p>
-                        {% elif order.status == 'washing' %}
-                        <p><span>🧼</span> Currently being washed</p>
-                        {% elif order.status == 'drying' %}
-                        <p><span>💨</span> Currently drying</p>
-                        {% endif %}
-                    </div>
-                    <div class="order-actions">
-                        <button class="btn-update" onclick="openUpdateStatus('{{ order.id }}')">Update Status →</button>
-                        <button class="btn-view" onclick="openOrderDetail('{{ order.id }}')">View</button>
-                    </div>
+<div class="orders-grid" id="productionOrdersGrid">
+    {% for order in production_orders %}
+    <div class="order-card" data-order-id="{{ order.id }}">
+        <div class="order-header">
+            <span class="order-number">{{ order.order_number }}</span>
+            <span class="order-status 
+                {% if order.status == 'delivered_to_shop' %}status-waiting
+                {% elif order.status == 'washing' %}status-washing
+                {% elif order.status == 'drying' %}status-drying
+                {% else %}status-processing{% endif %}">
+                {% if order.status == 'delivered_to_shop' %}
+                    ⏳ Waiting to Start
+                {% elif order.status == 'washing' %}
+                    🧼 Being Washed
+                {% elif order.status == 'drying' %}
+                    💨 Drying
+                {% else %}
+                    {{ order.get_status_display }}
+                {% endif %}
+            </span>
+        </div>
+        <div class="order-customer">
+            <div class="cust-avatar">{{ order.customer.first_name|first|default:"C" }}</div>
+            <div>
+                <div class="cust-name">{{ order.customer.get_full_name|default:order.customer.username }}</div>
+                <div class="cust-phone">
+                    {% if order.rider %}
+                    🛵 Rider: {{ order.rider.get_full_name|default:order.rider.username }}
+                    {% else %}
+                    👤 No rider assigned yet
+                    {% endif %}
                 </div>
-                {% empty %}
-                <div class="no-orders" style="grid-column: 1/-1; text-align: center; padding: 40px;">
-                    <p>No orders currently in production.</p>
-                </div>
-                {% endfor %}
             </div>
+        </div>
+        <div class="order-details">
+            <p><span>⚖️</span> {{ order.weight|floatformat:0 }}kg — {{ order.get_service_type_display }}</p>
+            <p><span>⏰</span> Order placed {{ order.created_at|timesince }} ago</p>
+            {% if order.status == 'delivered_to_shop' %}
+            <p><span>📦</span> Dirty laundry has been delivered to your shop! Ready to start washing.</p>
+            {% elif order.status == 'washing' %}
+            <p><span>🧼</span> Currently being washed</p>
+            {% elif order.status == 'drying' %}
+            <p><span>💨</span> Currently drying</p>
+            {% endif %}
+        </div>
+        <div class="order-actions">
+            {% if order.status == 'delivered_to_shop' %}
+            <button class="btn-update" onclick="openUpdateStatus('{{ order.id }}')">Start Washing →</button>
+            {% elif order.status == 'washing' %}
+            <button class="btn-update" onclick="openUpdateStatus('{{ order.id }}')">Mark as Drying →</button>
+            {% elif order.status == 'drying' %}
+            <button class="btn-update" onclick="openUpdateStatus('{{ order.id }}')">Mark as Ready →</button>
+            {% else %}
+            <button class="btn-update" onclick="openUpdateStatus('{{ order.id }}')" disabled style="opacity:0.5; cursor:not-allowed;">Update Status →</button>
+            {% endif %}
+            <button class="btn-view" onclick="openOrderDetail('{{ order.id }}')">View</button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="no-orders" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+        <p>No orders currently in production.</p>
+    </div>
+    {% endfor %}
+</div>
 
             <!-- READY FOR PICKUP SECTION -->
             <div class="section-header" style="margin-top:40px;">
@@ -933,11 +953,11 @@
 <div class="modal-overlay" id="updateStatusModal">
     <div class="modal">
         <div class="modal-header">
-            <div class="modal-title">Update Order Status</div>
+            <div class="modal-title">Update Laundry Status</div>
             <button class="modal-close" onclick="closeModal('updateStatusModal')">×</button>
         </div>
         <div class="modal-body">
-            <p>Select the new status for this order:</p>
+            <p style="margin-bottom: 16px;">Update the processing status of this order:</p>
             <div class="status-options">
                 <div class="status-option" data-status="washing" onclick="selectStatus(this, 'washing')">
                     <div class="status-icon">🧺</div>
@@ -958,11 +978,14 @@
                 <div class="status-option" data-status="ready" onclick="selectStatus(this, 'ready')">
                     <div class="status-icon">✅</div>
                     <div class="status-info">
-                        <div class="status-text">Ready for Delivery</div>
-                        <div class="status-desc">Laundry is ready for pickup</div>
+                        <div class="status-text">Ready for Pickup</div>
+                        <div class="status-desc">Clean laundry ready for rider to pickup</div>
                     </div>
                     <div class="status-check">✓</div>
                 </div>
+            </div>
+            <div id="statusUpdateNote" style="margin-top: 12px; padding: 10px; background: rgba(26,107,90,0.1); border-radius: 8px; font-size: 12px; color: var(--teal);">
+                ℹ️ You can only update status after receiving the dirty laundry from the rider.
             </div>
             <div class="modal-actions">
                 <button class="btn-primary" id="confirmStatusBtn" onclick="confirmStatusUpdate()">Confirm Update</button>
@@ -1422,21 +1445,158 @@ async function confirmReject() {
     }
 }
 
-// ========== UPDATE STATUS ==========
-function openUpdateStatus(orderId) {
+async function openUpdateStatus(orderId) {
     currentUpdateOrder = orderId;
     selectedStatusEl = null;
     
-    const modal = document.getElementById('updateStatusModal');
-    if (modal) {
-        document.querySelectorAll('.status-option').forEach(option => {
-            option.classList.remove('selected');
-        });
-        modal.classList.add('open');
+    // First fetch the order details to check current status
+    try {
+        const response = await fetch(`/api/order/${orderId}/details/`);
+        const data = await response.json();
+        
+        if (data.success && data.order) {
+            const order = data.order;
+            const currentStatus = order.status;
+            
+            console.log('Current status:', currentStatus);
+            
+            // Shop can update status when status is delivered_to_shop, washing, or drying
+            const canUpdate = ['delivered_to_shop', 'washing', 'drying'].includes(currentStatus);
+            
+            if (!canUpdate) {
+                let message = '';
+                let title = 'Cannot Update Status';
+                
+                if (currentStatus === 'pending') {
+                    message = '⚠️ Order has not been accepted yet. Please accept the order first.';
+                } else if (currentStatus === 'accepted') {
+                    message = '⚠️ Waiting for a rider to accept this order. Once a rider accepts and picks up the laundry, you will be able to update the status.';
+                } else if (currentStatus === 'rider_accepted') {
+                    message = '⚠️ A rider has accepted the order and is heading to pick up the laundry from the customer. Please wait for the rider to deliver the dirty laundry to your shop.';
+                } else if (currentStatus === 'picked_up') {
+                    message = '⚠️ The rider has picked up the dirty laundry from the customer and is on the way to your shop. Please wait for delivery.';
+                } else if (currentStatus === 'ready') {
+                    message = '✅ Laundry is ready for rider pickup. You do not need to update the status at this point.';
+                } else if (currentStatus === 'picked_up_from_shop') {
+                    message = '🚚 The rider has picked up the clean laundry from your shop and is delivering to the customer.';
+                } else if (currentStatus === 'out_for_delivery') {
+                    message = '🚚 The clean laundry is out for delivery to the customer.';
+                } else if (currentStatus === 'delivered') {
+                    message = '🎉 The order has been completed and delivered to the customer.';
+                } else {
+                    message = '⚠️ You can only update the status after the rider has delivered the dirty laundry to your shop.';
+                }
+                
+                showToast(title, message, 'warning');
+                return;
+            }
+            
+            // Enable/disable status options based on current status
+            const modal = document.getElementById('updateStatusModal');
+            if (modal) {
+                // Reset all options first
+                document.querySelectorAll('.status-option').forEach(option => {
+                    option.classList.remove('disabled', 'selected');
+                    option.style.opacity = '1';
+                    option.style.pointerEvents = 'auto';
+                });
+                
+                // Update the note message and enable appropriate options
+                const noteDiv = document.getElementById('statusUpdateNote');
+                if (noteDiv) {
+                    if (currentStatus === 'delivered_to_shop') {
+                        noteDiv.innerHTML = '📦 The dirty laundry has been delivered to your shop! Click "Start Washing" to begin processing.';
+                        noteDiv.style.background = 'rgba(26,107,90,0.15)';
+                        noteDiv.style.color = 'var(--teal)';
+                        
+                        // Only allow washing option
+                        document.querySelectorAll('.status-option').forEach(option => {
+                            const statusValue = option.getAttribute('data-status');
+                            if (statusValue !== 'washing') {
+                                option.classList.add('disabled');
+                                option.style.opacity = '0.5';
+                                option.style.pointerEvents = 'none';
+                            } else {
+                                // Update the text for washing option
+                                const statusText = option.querySelector('.status-text');
+                                if (statusText) statusText.textContent = 'Start Washing';
+                                const statusDesc = option.querySelector('.status-desc');
+                                if (statusDesc) statusDesc.textContent = 'Begin washing the dirty laundry';
+                            }
+                        });
+                    } else if (currentStatus === 'washing') {
+                        noteDiv.innerHTML = '🧼 Washing is complete! Click "Mark as Drying" to move to the drying stage.';
+                        noteDiv.style.background = 'rgba(48,201,142,0.15)';
+                        noteDiv.style.color = 'var(--accent)';
+                        
+                        // Only allow drying option
+                        document.querySelectorAll('.status-option').forEach(option => {
+                            const statusValue = option.getAttribute('data-status');
+                            if (statusValue !== 'drying') {
+                                option.classList.add('disabled');
+                                option.style.opacity = '0.5';
+                                option.style.pointerEvents = 'none';
+                            } else {
+                                const statusText = option.querySelector('.status-text');
+                                if (statusText) statusText.textContent = 'Mark as Drying';
+                                const statusDesc = option.querySelector('.status-desc');
+                                if (statusDesc) statusDesc.textContent = 'Move to drying stage';
+                            }
+                        });
+                    } else if (currentStatus === 'drying') {
+                        noteDiv.innerHTML = '💨 Drying is complete! Click "Mark as Ready" to notify the rider that the laundry is ready for pickup.';
+                        noteDiv.style.background = 'rgba(245,200,66,0.15)';
+                        noteDiv.style.color = '#c49a00';
+                        
+                        // Only allow ready option
+                        document.querySelectorAll('.status-option').forEach(option => {
+                            const statusValue = option.getAttribute('data-status');
+                            if (statusValue !== 'ready') {
+                                option.classList.add('disabled');
+                                option.style.opacity = '0.5';
+                                option.style.pointerEvents = 'none';
+                            } else {
+                                const statusText = option.querySelector('.status-text');
+                                if (statusText) statusText.textContent = 'Mark as Ready';
+                                const statusDesc = option.querySelector('.status-desc');
+                                if (statusDesc) statusDesc.textContent = 'Ready for rider pickup';
+                            }
+                        });
+                    }
+                }
+                
+                // Update button text
+                const confirmBtn = document.getElementById('confirmStatusBtn');
+                if (confirmBtn) {
+                    if (currentStatus === 'delivered_to_shop') {
+                        confirmBtn.textContent = 'Start Washing';
+                    } else if (currentStatus === 'washing') {
+                        confirmBtn.textContent = 'Mark as Drying';
+                    } else if (currentStatus === 'drying') {
+                        confirmBtn.textContent = 'Mark as Ready';
+                    } else {
+                        confirmBtn.textContent = 'Confirm Update';
+                    }
+                }
+                
+                modal.classList.add('open');
+            }
+        } else {
+            showToast('Error', 'Could not load order details', 'danger');
+        }
+    } catch (error) {
+        console.error('Error fetching order details:', error);
+        showToast('Error', 'Failed to load order details', 'danger');
     }
 }
 
 function selectStatus(element, status) {
+    // Check if the option is disabled
+    if (element.classList.contains('disabled')) {
+        showToast('Status Not Available', 'This status update is not available at this stage. Please follow the correct order flow.', 'warning');
+        return;
+    }
+    
     document.querySelectorAll('.status-option').forEach(option => {
         option.classList.remove('selected');
     });
@@ -1447,6 +1607,12 @@ function selectStatus(element, status) {
 async function confirmStatusUpdate() {
     if (!selectedStatusEl) {
         showToast('No Status Selected', 'Please select a status before confirming.', 'warning');
+        return;
+    }
+    
+    // Double-check that the selected option is not disabled
+    if (selectedStatusEl.classList.contains('disabled')) {
+        showToast('Invalid Selection', 'This status option is not available at this stage.', 'warning');
         return;
     }
     
@@ -1473,6 +1639,16 @@ async function confirmStatusUpdate() {
         
         if (data.success) {
             showToast('Status Updated ✅', data.message, 'success');
+            
+            // Add a notification for the rider that status has been updated
+            addShopNotification(
+                '🧼 Laundry Status Updated',
+                `Order status has been updated to ${data.status_display || newStatus}.`,
+                'info',
+                currentUpdateOrder,
+                data.order_number
+            );
+            
             setTimeout(() => location.reload(), 1000);
         } else {
             showToast('Error', data.message || 'Failed to update status', 'danger');

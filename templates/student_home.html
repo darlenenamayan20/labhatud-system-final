@@ -514,6 +514,18 @@
 .contact-info p {
     margin: 8px 0;
 }
+
+/* Pickup Time Dropdown - White background, Black text */
+#bk_time {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: 1.5px solid var(--border);
+}
+
+#bk_time option {
+    background-color: #ffffff;
+    color: #000000;
+}
     </style>
 </head>
 <body>
@@ -704,17 +716,29 @@
             <div class="order-progress">
                 <div class="progress-steps">
                     <div class="step completed">Order Placed</div>
-                    <div class="step {% if order.status == 'washing' or order.status == 'drying' or order.status == 'ready' or order.status == 'out_for_delivery' or order.status == 'delivered' %}completed{% elif order.status == 'accepted' %}active{% endif %}">Shop Processing</div>
-                    <div class="step {% if order.status == 'out_for_delivery' or order.status == 'delivered' %}completed{% elif order.status == 'picked_up' or order.status == 'ready' %}active{% endif %}">Rider Delivery</div>
-                    <div class="step {% if order.status == 'delivered' %}completed{% elif order.status == 'out_for_delivery' %}active{% endif %}">Delivered</div>
+                    <div class="step {% if order.status == 'washing' or order.status == 'drying' or order.status == 'ready' or order.status == 'picked_up_from_shop' or order.status == 'out_for_delivery' or order.status == 'delivered' %}completed{% elif order.status == 'accepted' %}active{% endif %}">Shop Processing</div>
+                    <div class="step {% if order.status == 'picked_up_from_shop' or order.status == 'out_for_delivery' or order.status == 'delivered' %}completed{% elif order.status == 'ready' %}active{% endif %}">Pickup from Shop</div>
+                    <div class="step {% if order.status == 'out_for_delivery' or order.status == 'delivered' %}completed{% elif order.status == 'picked_up_from_shop' %}active{% endif %}">Out for Delivery</div>
+                    <div class="step {% if order.status == 'delivered' %}completed{% endif %}">Delivered</div>
                 </div>
             </div>
             
-            <!-- Status information for customer (NO confirmation button - rider confirms delivery) -->
-            {% if order.status == 'out_for_delivery' %}
+            <!-- Status information for customer based on current status -->
+            {% if order.status == 'picked_up_from_shop' %}
+            <div style="margin: 12px 0; padding: 12px; background: rgba(48,201,142,0.1); border-radius: 10px;">
+                <div style="font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 8px;">🧺 Clean laundry picked up from shop!</div>
+                <div style="font-size: 12px; color: var(--text2);">The rider has picked up your clean laundry and is heading to your location.</div>
+                {% if order.rider %}
+                <div style="margin-top: 8px; padding: 8px; background: rgba(26,107,90,0.05); border-radius: 8px;">
+                    <div style="font-size: 12px;"><strong>Rider:</strong> {{ order.rider.get_full_name|default:order.rider.username }}</div>
+                    <div style="font-size: 12px;"><strong>Contact:</strong> {{ order.rider.phone|default:"Not provided" }}</div>
+                </div>
+                {% endif %}
+            </div>
+            {% elif order.status == 'out_for_delivery' %}
             <div style="margin: 12px 0; padding: 12px; background: rgba(26,107,90,0.1); border-radius: 10px;">
                 <div style="font-size: 13px; font-weight: 600; color: var(--teal); margin-bottom: 8px;">🚚 Your order is out for delivery!</div>
-                <div style="font-size: 12px; color: var(--text2);">Your laundry is on its way to your location. Please stay available.</div>
+                <div style="font-size: 12px; color: var(--text2);">Your clean laundry is on its way to your location. Please stay available.</div>
                 {% if order.rider %}
                 <div style="margin-top: 8px; padding: 8px; background: rgba(26,107,90,0.05); border-radius: 8px;">
                     <div style="font-size: 12px;"><strong>Rider:</strong> {{ order.rider.get_full_name|default:order.rider.username }}</div>
@@ -1756,75 +1780,86 @@
         }
     }
 
-    function displayTrackingData(order) {
-        document.getElementById('trackOrderNum').textContent = 'Order #' + order.order_number;
-        const statusEl = document.getElementById('trackStatus');
-        statusEl.textContent = order.status_display || order.status;
-        statusEl.className = 'order-status ' + (order.status_class || 'status-progress');
-        
-        const timeline = document.getElementById('trackTimeline');
-        let html = '';
-        
-        const trackingSteps = [
-            { key: 'placed', label: 'Order Placed', icon: '📋', description: 'Your order has been submitted to the shop.' },
-            { key: 'shop_accepted', label: 'Order Accepted by Shop', icon: '✅', description: 'The shop has accepted your order.' },
-            { key: 'rider_accepted', label: 'Rider Accepted', icon: '🛵', description: 'A rider has accepted your order.' },
-            { key: 'picked_up', label: 'Picked Up', icon: '📦', description: 'The rider has picked up your order.' },
-            { key: 'washing', label: 'Being Washed', icon: '🧼', description: 'Your clothes are being washed.' },
-            { key: 'drying', label: 'Drying', icon: '💨', description: 'Your clothes are being dried.' },
-            { key: 'ready', label: 'Ready for Delivery', icon: '✅', description: 'Your order is ready for delivery!' },
-            { key: 'out_for_delivery', label: 'Out for Delivery', icon: '🚚', description: 'Your order is on its way!' },
-            { key: 'delivered', label: 'Delivered', icon: '🎉', description: 'Your order has been delivered!' }
-        ];
-        
-        let completedKeys = ['placed'];
-        if (order.status === 'accepted') completedKeys = ['placed', 'shop_accepted'];
-        else if (order.status === 'rider_accepted') completedKeys = ['placed', 'shop_accepted', 'rider_accepted'];
-        else if (order.status === 'picked_up') completedKeys = ['placed', 'shop_accepted', 'rider_accepted', 'picked_up'];
-        else if (order.status === 'washing') completedKeys = ['placed', 'shop_accepted', 'rider_accepted', 'picked_up', 'washing'];
-        else if (order.status === 'drying') completedKeys = ['placed', 'shop_accepted', 'rider_accepted', 'picked_up', 'washing', 'drying'];
-        else if (order.status === 'ready') completedKeys = ['placed', 'shop_accepted', 'rider_accepted', 'picked_up', 'washing', 'drying', 'ready'];
-        else if (order.status === 'out_for_delivery') completedKeys = ['placed', 'shop_accepted', 'rider_accepted', 'picked_up', 'washing', 'drying', 'ready', 'out_for_delivery'];
-        else if (order.status === 'delivered') completedKeys = ['placed', 'shop_accepted', 'rider_accepted', 'picked_up', 'washing', 'drying', 'ready', 'out_for_delivery', 'delivered'];
-        
-        const riderName = order.rider_name || null;
-        const riderPhone = order.rider_phone || null;
-        const timestamps = order.timestamps || {};
-        
-        trackingSteps.forEach((step, index) => {
-            let state = '';
-            let extraInfo = '';
-            let timeText = timestamps[step.key] || '';
-            
-            if (completedKeys.includes(step.key)) {
-                state = 'done';
-            } else if (index === completedKeys.length && order.status !== 'delivered' && order.status !== 'rejected') {
-                state = 'active';
-            }
-            
-            if (step.key === 'rider_accepted' && state === 'done' && riderName) {
-                extraInfo = `<div style="font-size: 11px; color: var(--teal); margin-top: 6px; padding: 6px 10px; background: rgba(26,107,90,0.08); border-radius: 8px;">
-                    <strong>Rider:</strong> ${escapeHtml(riderName)}<br>
-                    ${riderPhone ? `<strong>Contact:</strong> ${escapeHtml(riderPhone)}` : ''}
-                </div>`;
-            }
-            
-            html += `
-                <div class="track-step ${state}">
-                    <div class="track-dot">${state === 'done' ? '✓' : (state === 'active' ? '●' : '○')}</div>
-                    <div class="track-info">
-                        <div class="track-label">${step.icon} ${step.label}</div>
-                        ${timeText ? `<div class="track-time">${timeText}</div>` : ''}
-                        <div class="track-desc">${step.description}</div>
-                        ${extraInfo}
-                    </div>
-                </div>
-            `;
-        });
-        
-        timeline.innerHTML = html;
-        document.getElementById('trackingModal').classList.add('open');
+    // Updated displayTrackingData function for student_home.html
+function displayTrackingData(order) {
+    document.getElementById('trackOrderNum').textContent = 'Order #' + order.order_number;
+    const statusEl = document.getElementById('trackStatus');
+    statusEl.textContent = order.status_display || order.status;
+    statusEl.className = 'order-status ' + (order.status_class || 'status-progress');
+    
+    const timeline = document.getElementById('trackTimeline');
+    let html = '';
+    
+    // Updated tracking steps with all statuses
+    const trackingSteps = [
+        { key: 'placed', label: 'Order Placed', icon: '📋', description: 'Your order has been submitted to the shop.' },
+        { key: 'shop_accepted', label: 'Order Accepted by Shop', icon: '✅', description: 'The shop has accepted your order.' },
+        { key: 'rider_accepted', label: 'Rider Accepted', icon: '🛵', description: 'A rider has accepted your order and will pick up your laundry.' },
+        { key: 'picked_up', label: 'Picked Up from Customer', icon: '📦', description: 'The rider has picked up your dirty laundry from your location.' },
+        { key: 'delivered_to_shop', label: 'Delivered to Shop', icon: '🏪', description: 'Your laundry has been delivered to the shop for washing.' },
+        { key: 'washing', label: 'Being Washed', icon: '🧼', description: 'Your clothes are being washed.' },
+        { key: 'drying', label: 'Drying', icon: '💨', description: 'Your clothes are being dried.' },
+        { key: 'ready', label: 'Ready for Pickup', icon: '✅', description: 'Your clean laundry is ready for pickup from the shop.' },
+        { key: 'picked_up_from_shop', label: 'Picked Up from Shop', icon: '🧺', description: 'The rider has picked up your clean laundry from the shop.' },
+        { key: 'out_for_delivery', label: 'Out for Delivery', icon: '🚚', description: 'Your clean laundry is on its way to you!' },
+        { key: 'delivered', label: 'Delivered', icon: '🎉', description: 'Your order has been delivered!' }
+    ];
+    
+    // Define the order of statuses for completion tracking
+    const statusOrder = ['placed', 'shop_accepted', 'rider_accepted', 'picked_up', 'delivered_to_shop', 'washing', 'drying', 'ready', 'picked_up_from_shop', 'out_for_delivery', 'delivered'];
+    
+    // Determine which steps are completed based on current status
+    let completedKeys = ['placed'];
+    const currentStatusIndex = statusOrder.indexOf(order.status);
+    if (currentStatusIndex !== -1) {
+        completedKeys = statusOrder.slice(0, currentStatusIndex + 1);
     }
+    
+    const riderName = order.rider_name || null;
+    const riderPhone = order.rider_phone || null;
+    const timestamps = order.timestamps || {};
+    
+    trackingSteps.forEach((step, index) => {
+        let state = '';
+        let extraInfo = '';
+        let timeText = timestamps[step.key] || '';
+        
+        if (completedKeys.includes(step.key)) {
+            state = 'done';
+        } else if (index === completedKeys.length && order.status !== 'delivered' && order.status !== 'rejected') {
+            state = 'active';
+        }
+        
+        if (step.key === 'rider_accepted' && state === 'done' && riderName) {
+            extraInfo = `<div style="font-size: 11px; color: var(--teal); margin-top: 6px; padding: 6px 10px; background: rgba(26,107,90,0.08); border-radius: 8px;">
+                <strong>Rider:</strong> ${escapeHtml(riderName)}<br>
+                ${riderPhone ? `<strong>Contact:</strong> ${escapeHtml(riderPhone)}` : ''}
+            </div>`;
+        }
+        
+        // Special message for picked_up_from_shop status
+        if (step.key === 'picked_up_from_shop' && state === 'done' && riderName) {
+            extraInfo = `<div style="font-size: 11px; color: var(--accent); margin-top: 6px; padding: 6px 10px; background: rgba(48,201,142,0.1); border-radius: 8px;">
+                <strong>Rider:</strong> ${escapeHtml(riderName)} is on the way with your clean laundry! 🧺
+            </div>`;
+        }
+        
+        html += `
+            <div class="track-step ${state}">
+                <div class="track-dot">${state === 'done' ? '✓' : (state === 'active' ? '●' : '○')}</div>
+                <div class="track-info">
+                    <div class="track-label">${step.icon} ${step.label}</div>
+                    ${timeText ? `<div class="track-time">${timeText}</div>` : ''}
+                    <div class="track-desc">${step.description}</div>
+                    ${extraInfo}
+                </div>
+            </div>
+        `;
+    });
+    
+    timeline.innerHTML = html;
+    document.getElementById('trackingModal').classList.add('open');
+}
 
     document.addEventListener('DOMContentLoaded', function() {
     // ========== CHECK FOR PAYMENT SUCCESS ==========
@@ -2176,6 +2211,31 @@ function checkPaymentSuccess() {
     }
     
     return { paymentSuccess, pendingBooking };
+}
+
+// ========== FOOTER MODAL FUNCTIONS ==========
+function showAboutModal() {
+    document.getElementById('aboutModal').classList.add('open');
+}
+
+function showContactModal() {
+    document.getElementById('contactModal').classList.add('open');
+}
+
+function showPrivacyModal() {
+    document.getElementById('privacyModal').classList.add('open');
+}
+
+function showTermsModal() {
+    document.getElementById('termsModal').classList.add('open');
+}
+
+function showHelpModal() {
+    document.getElementById('helpModal').classList.add('open');
+}
+
+function closeFooterModal(modalId) {
+    document.getElementById(modalId).classList.remove('open');
 }
 </script>
 

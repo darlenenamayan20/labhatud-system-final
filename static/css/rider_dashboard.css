@@ -801,3 +801,41 @@ footer { background: var(--text); color: rgba(255,255,255,0.75); padding: 32px; 
     margin-top: 4px;
     line-height: 1.4;
 }
+
+/* Status colors */
+.status-pending { background: rgba(245,168,35,0.13); color: var(--warning); }
+.status-pickup { background: rgba(26,107,90,0.12); color: var(--teal); }
+.status-processing { background: rgba(48,201,142,0.13); color: var(--accent); }
+.status-washing { background: rgba(48,201,142,0.13); color: var(--accent); }
+.status-drying { background: rgba(48,201,142,0.13); color: var(--accent); }
+.status-ready { background: rgba(245,200,66,0.15); color: #c49a00; }
+.status-delivering { background: rgba(74,158,255,0.13); color: #4a9eff; }
+.status-done { background: rgba(34,201,122,0.13); color: var(--success); }
+
+/* Progress steps */
+.progress-steps {
+    display: flex;
+    gap: 4px;
+    margin: 12px 0;
+    flex-wrap: wrap;
+}
+.step {
+    flex: 1;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 6px 4px;
+    border-radius: 6px;
+    background: var(--bg2);
+    color: var(--text3);
+    min-width: 60px;
+}
+.step.completed {
+    background: var(--teal);
+    color: #fff;
+}
+.step.active {
+    background: var(--accent);
+    color: #fff;
+    animation: pulse 2s infinite;
+}

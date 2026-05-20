@@ -242,7 +242,7 @@
 
             <!-- Replace the DASHBOARD PANEL Active Tasks section with this -->
 
-<!-- ACTIVE TASKS SECTION - Shows orders assigned to this rider -->
+<!-- Active Tasks Section -->
 <div class="section-header" style="margin-top:40px;">
     <div>
         <h2 class="section-title">Active Tasks</h2>
@@ -261,6 +261,10 @@
                     {% elif order.status == 'accepted' %}status-pending
                     {% elif order.status == 'rider_accepted' %}status-pickup
                     {% elif order.status == 'picked_up' %}status-pickup
+                    {% elif order.status == 'delivered_to_shop' %}status-processing
+                    {% elif order.status == 'washing' %}status-washing
+                    {% elif order.status == 'drying' %}status-drying
+                    {% elif order.status == 'picked_up_from_shop' %}status-delivering
                     {% elif order.status == 'out_for_delivery' %}status-delivering
                     {% endif %}">
                     {{ order.get_status_display }}
@@ -268,34 +272,56 @@
             </div>
             <div class="task-locations">
                 <div class="location-row">
-                    <span class="loc-icon">🏪</span>
+                    <span class="loc-icon">🏠</span>
                     <div>
-                        <div class="loc-label">Pickup From Shop</div>
-                        <div class="loc-addr">{{ order.shop.shop_name }}</div>
-                        <div class="loc-sub">{{ order.shop.address|truncatechars:25 }}</div>
-                    </div>
-                </div>
-                <div class="location-row">
-                    <span class="loc-icon">📍</span>
-                    <div>
-                        <div class="loc-label">Deliver To Customer</div>
+                        <div class="loc-label">Pickup Dirty Laundry From</div>
                         <div class="loc-addr">{{ order.customer.get_full_name|default:order.customer.username }}</div>
                         <div class="loc-sub">{{ order.pickup_address|truncatechars:25 }}</div>
                     </div>
                 </div>
+                <div class="location-row">
+                    <span class="loc-icon">🏪</span>
+                    <div>
+                        <div class="loc-label">Deliver Dirty Laundry To Shop</div>
+                        <div class="loc-addr">{{ order.shop.shop_name }}</div>
+                        <div class="loc-sub">{{ order.shop.address|truncatechars:25 }}</div>
+                    </div>
+                </div>
+                {% if order.status == 'ready' or order.status == 'picked_up_from_shop' or order.status == 'out_for_delivery' %}
+                <div class="location-row">
+                    <span class="loc-icon">📍</span>
+                    <div>
+                        <div class="loc-label">Deliver Clean Laundry To</div>
+                        <div class="loc-addr">{{ order.customer.get_full_name|default:order.customer.username }}</div>
+                        <div class="loc-sub">{{ order.pickup_address|truncatechars:25 }}</div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
             
-            <!-- Progress Steps -->
+            <!-- Progress Steps - Full Workflow -->
             <div class="progress-steps">
                 <div class="step completed">Assigned</div>
-                <div class="step {% if order.status == 'picked_up' or order.status == 'out_for_delivery' %}completed{% elif order.status == 'rider_accepted' %}active{% endif %}">
-                    Picked Up
+                <div class="step {% if order.status == 'picked_up' or order.status == 'delivered_to_shop' or order.status == 'washing' or order.status == 'drying' or order.status == 'ready' or order.status == 'picked_up_from_shop' or order.status == 'out_for_delivery' or order.status == 'delivered' %}completed{% elif order.status == 'rider_accepted' %}active{% endif %}">
+                    Pickup from Customer
                 </div>
-                <div class="step {% if order.status == 'out_for_delivery' %}completed{% elif order.status == 'picked_up' %}active{% endif %}">
-                    Out for Delivery
+                <div class="step {% if order.status == 'delivered_to_shop' or order.status == 'washing' or order.status == 'drying' or order.status == 'ready' or order.status == 'picked_up_from_shop' or order.status == 'out_for_delivery' or order.status == 'delivered' %}completed{% elif order.status == 'picked_up' %}active{% endif %}">
+                    Deliver to Shop
+                </div>
+                <div class="step {% if order.status == 'washing' or order.status == 'drying' or order.status == 'ready' or order.status == 'picked_up_from_shop' or order.status == 'out_for_delivery' or order.status == 'delivered' %}completed{% elif order.status == 'delivered_to_shop' %}active{% endif %}">
+                    Shop Processing
+                </div>
+                <div class="step {% if order.status == 'ready' or order.status == 'picked_up_from_shop' or order.status == 'out_for_delivery' or order.status == 'delivered' %}completed{% elif order.status == 'drying' %}active{% endif %}">
+                    Ready for Pickup
+                </div>
+                <div class="step {% if order.status == 'picked_up_from_shop' or order.status == 'out_for_delivery' or order.status == 'delivered' %}completed{% elif order.status == 'ready' %}active{% endif %}">
+                    Pickup Clean from Shop
+                </div>
+                <div class="step {% if order.status == 'out_for_delivery' or order.status == 'delivered' %}completed{% elif order.status == 'picked_up_from_shop' %}active{% endif %}">
+                    Deliver to Customer
                 </div>
                 <div class="step {% if order.status == 'delivered' %}completed{% endif %}">
-                    Delivered
+                    Completed
                 </div>
             </div>
             
@@ -306,33 +332,60 @@
                 <div class="task-meta-item"><span>📅</span> {{ order.pickup_date|date:"M d" }} at {{ order.pickup_time|time:"g:i A" }}</div>
             </div>
             
-            <!-- ========== ACTION BUTTONS FIXED ========== -->
             <div class="task-actions">
-                {% if order.status == 'ready' %}
-                    <!-- READY ORDER - Show Out for Delivery button directly -->
-                    <button class="btn-out-for-delivery" onclick="markAsOutForDelivery('{{ order.order_number }}')" style="flex:1; padding: 10px; background: #1a6b5a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                        🚚 Mark as Out for Delivery
-                    </button>
-                {% elif order.status == 'accepted' %}
-                    <!-- ACCEPTED ORDER - Show Accept button -->
-                    <button class="btn-accept" data-order-id="{{ order.id }}" onclick="acceptTask(this)" style="flex:1; padding: 10px; background: #22c97a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                        ✅ Accept Task
-                    </button>
-                {% elif order.status == 'rider_accepted' %}
-                    <button class="btn-update" onclick="quickUpdateStatus('{{ order.order_number }}', 'picked_up')" style="flex:1; padding: 10px; background: #f5a623; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                        📥 Mark as Picked Up
-                    </button>
-                {% elif order.status == 'picked_up' %}
-                    <button class="btn-update" onclick="quickUpdateStatus('{{ order.order_number }}', 'out_for_delivery')" style="flex:1; padding: 10px; background: #1a6b5a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                        🚚 Mark as Out for Delivery
-                    </button>
-                {% elif order.status == 'out_for_delivery' %}
-                    <button class="btn-update" onclick="quickUpdateStatus('{{ order.order_number }}', 'delivered')" style="flex:1; padding: 10px; background: #22c97a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                        ✅ Mark as Delivered
-                    </button>
-                {% endif %}
-                <button class="btn-view" onclick="openTaskDetail('{{ order.order_number }}')">View Details</button>
-            </div>
+    {% if order.status == 'accepted' %}
+        <!-- Order accepted by shop, waiting for rider to accept -->
+        <button class="btn-accept" data-order-id="{{ order.id }}" onclick="acceptTask(this)" style="flex:1;">✅ Accept Task</button>
+    
+    {% elif order.status == 'rider_accepted' %}
+        <!-- Rider accepted, needs to pickup from customer -->
+        <button class="btn-update" onclick="quickUpdateStatus('{{ order.order_number }}', 'picked_up')" style="flex:1; background: #f5a623;">
+            🏠 Pickup from Customer
+        </button>
+    
+    {% elif order.status == 'picked_up' %}
+        <!-- Picked up from customer, needs to deliver to shop -->
+        <button class="btn-update" onclick="quickUpdateStatus('{{ order.order_number }}', 'delivered_to_shop')" style="flex:1; background: #1a6b5a;">
+            🏪 Deliver Dirty to Shop
+        </button>
+    
+    {% elif order.status == 'washing' or order.status == 'drying' %}
+        <!-- Shop is processing -->
+        <div style="flex:1; text-align: center; padding: 10px; background: var(--bg2); border-radius: 8px; color: var(--text2);">
+            🧼 Shop is processing your laundry...
+        </div>
+        <button class="btn-view" onclick="openTaskDetail('{{ order.order_number }}')">View</button>
+    
+    {% elif order.status == 'ready' %}
+        <!-- Clean laundry ready at shop, need to pickup -->
+        <button class="btn-update" onclick="quickUpdateStatus('{{ order.order_number }}', 'picked_up_from_shop')" style="flex:1; background: var(--accent);">
+            🧺 Pickup Clean from Shop
+        </button>
+        <button class="btn-view" onclick="openTaskDetail('{{ order.order_number }}')">View</button>
+    
+    {% elif order.status == 'picked_up_from_shop' %}
+        <!-- Picked up clean laundry, need to deliver to customer -->
+        <button class="btn-update" onclick="quickUpdateStatus('{{ order.order_number }}', 'out_for_delivery')" style="flex:1; background: #1a6b5a;">
+            🚚 Out for Delivery to Customer
+        </button>
+        <button class="btn-view" onclick="openTaskDetail('{{ order.order_number }}')">View</button>
+    
+    {% elif order.status == 'out_for_delivery' %}
+        <!-- Out for delivery to customer -->
+        <button class="btn-update" onclick="quickUpdateStatus('{{ order.order_number }}', 'delivered')" style="flex:1; background: #22c97a;">
+            ✅ Deliver to Customer
+        </button>
+        <button class="btn-view" onclick="openTaskDetail('{{ order.order_number }}')">View</button>
+    
+    {% elif order.status == 'delivered' %}
+        <!-- Completed -->
+        <div style="flex:1; text-align: center; padding: 10px; background: rgba(34,201,122,0.15); border-radius: 8px; color: var(--success);">
+            ✅ Order Completed!
+        </div>
+        <button class="btn-view" onclick="openTaskDetail('{{ order.order_number }}')">View</button>
+    {% endif %}
+</div>
+
         </div>
         {% endfor %}
     {% else %}
@@ -1141,7 +1194,9 @@ async function confirmRiderStatusUpdate() {
         
         if (data.success) {
             const statusMessages = {
-                'picked_up': 'Picked Up 📥',
+                'picked_up': 'Picked Up from Customer 📥',
+                'delivered_to_shop': 'Delivered to Shop 🏪',
+                'picked_up_from_shop': 'Picked Up Clean Laundry 🧺',
                 'out_for_delivery': 'Out for Delivery 🚚',
                 'delivered': 'Delivered ✅'
             };
@@ -1385,16 +1440,28 @@ document.addEventListener('DOMContentLoaded', function() {
 async function quickUpdateStatus(orderNumber, newStatus) {
     let confirmMessage = '';
     let successMessage = '';
+    let statusDisplay = '';
     
     if (newStatus === 'picked_up') {
-        confirmMessage = 'Have you picked up the laundry from the shop?';
-        successMessage = 'Order marked as Picked Up! 📥';
+        confirmMessage = 'Have you picked up the DIRTY laundry from the CUSTOMER?';
+        successMessage = 'Order marked as Picked Up from Customer! Deliver to shop for washing. 📦';
+        statusDisplay = 'Picked Up from Customer';
+    } else if (newStatus === 'delivered_to_shop') {
+        confirmMessage = 'Have you delivered the DIRTY laundry to the SHOP?';
+        successMessage = 'Dirty laundry delivered to shop! The shop will now process your order. 🏪';
+        statusDisplay = 'Delivered to Shop';
+    } else if (newStatus === 'picked_up_from_shop') {
+        confirmMessage = 'Have you picked up the CLEAN laundry from the SHOP?';
+        successMessage = 'Clean laundry picked up from shop! Heading to customer. 🧺';
+        statusDisplay = 'Picked Up Clean Laundry';
     } else if (newStatus === 'out_for_delivery') {
-        confirmMessage = 'Are you on your way to deliver the order?';
-        successMessage = 'Order marked as Out for Delivery! 🚚';
+        confirmMessage = 'Are you on your way to deliver the clean laundry to the CUSTOMER?';
+        successMessage = 'Out for Delivery! The clean laundry is on its way to the customer. 🚚';
+        statusDisplay = 'Out for Delivery';
     } else if (newStatus === 'delivered') {
-        confirmMessage = 'Have you successfully delivered the order to the customer?';
-        successMessage = 'Order marked as Delivered! ✅';
+        confirmMessage = 'Have you successfully delivered the clean laundry to the CUSTOMER?';
+        successMessage = 'Order Delivered! Thank you for completing this delivery. ✅';
+        statusDisplay = 'Delivered';
     }
     
     if (!confirm(confirmMessage)) {
@@ -1417,6 +1484,99 @@ async function quickUpdateStatus(orderNumber, newStatus) {
         
         if (data.success) {
             showToast('Status Updated!', successMessage, 'success');
+            
+            // Add notification for rider
+            addRiderNotification(
+                `📦 Order ${statusDisplay}`,
+                `Order #${orderNumber} has been marked as ${statusDisplay}.`,
+                'success',
+                data.order_id,
+                orderNumber
+            );
+            
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast('Update Failed', data.message || 'Could not update status', 'danger');
+        }
+    } catch (error) {
+        console.error('Error updating status:', error);
+        showToast('Error', 'Failed to update status. Please try again.', 'danger');
+    }
+}
+
+
+// Mark as delivered to shop (after picking up from customer)
+async function markAsDeliveredToShop(orderNumber) {
+    if (!confirm('Have you delivered the laundry to the SHOP? Click OK to confirm.')) {
+        return;
+    }
+    
+    showToast('Updating Status', 'Please wait...', 'info');
+    
+    try {
+        const response = await fetch(`/api/rider/order/${orderNumber}/update-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: 'delivered_to_shop' })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Status Updated!', 'Laundry delivered to shop! 🏪', 'success');
+            
+            addRiderNotification(
+                '🏪 Laundry Delivered to Shop',
+                `Order #${orderNumber} has been delivered to the shop for processing.`,
+                'success',
+                data.order_id,
+                orderNumber
+            );
+            
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast('Update Failed', data.message || 'Could not update status', 'danger');
+        }
+    } catch (error) {
+        console.error('Error updating status:', error);
+        showToast('Error', 'Failed to update status. Please try again.', 'danger');
+    }
+}
+
+// Mark as picked up clean laundry from shop
+async function markAsPickedUpFromShop(orderNumber) {
+    if (!confirm('Have you picked up the CLEAN laundry from the SHOP? Click OK to confirm.')) {
+        return;
+    }
+    
+    showToast('Updating Status', 'Please wait...', 'info');
+    
+    try {
+        const response = await fetch(`/api/rider/order/${orderNumber}/update-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: 'picked_up_from_shop' })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Status Updated!', 'Clean laundry picked up from shop! 🧺', 'success');
+            
+            addRiderNotification(
+                '🧺 Clean Laundry Picked Up',
+                `Clean laundry for order #${orderNumber} has been picked up from the shop.`,
+                'success',
+                data.order_id,
+                orderNumber
+            );
+            
             setTimeout(() => location.reload(), 1500);
         } else {
             showToast('Update Failed', data.message || 'Could not update status', 'danger');

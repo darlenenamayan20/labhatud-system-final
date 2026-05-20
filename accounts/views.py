@@ -331,7 +331,6 @@ def rider_dashboard(request):
         messages.error(request, 'Your rider account is pending admin approval.')
         return redirect('login_register')
     
-    # Import models here to avoid circular imports
     from .models import Order, Notification
     from django.db.models import Sum
     from datetime import timedelta
@@ -345,11 +344,10 @@ def rider_dashboard(request):
     ).select_related('customer', 'shop').order_by('-created_at')
     
     # ========== FIXED: Include ALL statuses that a rider should see ==========
-    # This includes: washing, drying, ready, accepted, rider_accepted, picked_up, out_for_delivery
-    # The rider should see the order throughout the entire laundry process
+    # This includes: washing, drying, ready, accepted, rider_accepted, picked_up, delivered_to_shop, picked_up_from_shop, out_for_delivery
     accepted_orders = Order.objects.filter(
         rider=request.user,
-        status__in=['washing', 'drying', 'ready', 'accepted', 'rider_accepted', 'picked_up', 'out_for_delivery']
+        status__in=['washing', 'drying', 'ready', 'accepted', 'rider_accepted', 'picked_up', 'delivered_to_shop', 'picked_up_from_shop', 'out_for_delivery']
     ).select_related('customer', 'shop').order_by('-created_at')
     
     # Get all orders for this rider (including completed)
@@ -366,9 +364,10 @@ def rider_dashboard(request):
     # Get schedule orders (future deliveries) - only this rider's orders
     schedule_orders = Order.objects.filter(
         rider=request.user,
-        status__in=['washing', 'drying', 'ready', 'accepted', 'rider_accepted', 'picked_up', 'out_for_delivery'],
+        status__in=['washing', 'drying', 'ready', 'accepted', 'rider_accepted', 'picked_up', 'delivered_to_shop', 'picked_up_from_shop', 'out_for_delivery'],
         pickup_date__gte=timezone.now().date()
     ).select_related('customer', 'shop').order_by('pickup_date', 'pickup_time')
+
     
     # Calculate earnings (only this rider's delivered orders)
     total_earnings = Order.objects.filter(
@@ -1011,8 +1010,6 @@ def get_user_detail_api(request, user_id):
         return JsonResponse({'error': 'User not found'}, status=404)
     
 
-# ========== LAUNDRY SHOP MANAGEMENT VIEWS ==========
-
 @login_required
 def student_home_view(request):
     """Student/Customer Dashboard - Shows all approved laundry shops"""
@@ -1063,10 +1060,12 @@ def student_home_view(request):
         status='pending'
     ).select_related('shop').order_by('-created_at')[:5]
     
-    # Active orders (accepted by shop, assigned to rider, or in progress)
+    # ========== FIXED: Active orders - Include ALL statuses until delivered ==========
+    # This includes: accepted, rider_accepted, picked_up, washing, drying, ready, 
+    # picked_up_from_shop, out_for_delivery
     active_orders = Order.objects.filter(
         customer=request.user,
-        status__in=['accepted', 'rider_accepted', 'picked_up', 'washing', 'drying', 'ready', 'out_for_delivery']
+        status__in=['accepted', 'rider_accepted', 'picked_up', 'washing', 'drying', 'ready', 'picked_up_from_shop', 'out_for_delivery']
     ).select_related('shop', 'rider').order_by('-created_at')[:5]
     
     # Delivered orders (completed) - Add has_review from database
@@ -1077,8 +1076,7 @@ def student_home_view(request):
     
     # Add has_review from the actual database field
     for order in delivered_orders:
-        # Check if review exists - use the has_review field
-        order.has_review = order.has_review  # This is from the model field
+        order.has_review = order.has_review
     
     # Rejected orders
     rejected_orders = Order.objects.filter(
@@ -1109,6 +1107,7 @@ def student_home_view(request):
     }
     return render(request, 'student_home.html', context)
 
+
 @login_required
 def shop_dashboard(request):
     """Shop Owner Dashboard - Manage shop and orders"""
@@ -1134,11 +1133,11 @@ def shop_dashboard(request):
         # PENDING orders (waiting for shop approval)
         pending_orders = Order.objects.filter(shop=shop, status='pending').order_by('-created_at')
         
-        # PRODUCTION orders (currently being washed/dried OR picked up by rider)
+        # PRODUCTION orders (delivered to shop, being washed/dried)
         production_orders = Order.objects.filter(
             shop=shop, 
-            status__in=['washing', 'drying', 'picked_up', 'rider_accepted']
-        ).order_by('-created_at')
+    status__in=['delivered_to_shop', 'washing', 'drying']
+).order_by('-created_at')
         
         # READY orders (ready for pickup by rider)
         ready_orders = Order.objects.filter(shop=shop, status='ready').order_by('-created_at')
@@ -1419,7 +1418,64 @@ def update_order_status_api(request, order_id):
         print(f"Shop Owner: {request.user.username}")
         
         if hasattr(request.user, 'shop') and order.shop == request.user.shop:
+            # ========== ALLOWED SHOP TRANSITIONS ==========
+            # Shop can update after rider has delivered dirty laundry (delivered_to_shop)
+            allowed_shop_transitions = {
+                'delivered_to_shop': ['washing'],     # Start washing (FIXED: was missing this)
+                'washing': ['drying'],                # Start drying
+                'drying': ['ready'],                  # Mark as ready for pickup
+            }
+            
+            # Check if current status is in allowed transitions
+            if order.status not in allowed_shop_transitions:
+                # Special case: if status is 'accepted', show appropriate message
+                if order.status == 'accepted':
+                    return JsonResponse({
+                        'success': False, 
+                        'message': '⚠️ This order has been accepted but no rider has been assigned yet. Please wait for a rider to pick up and deliver the laundry to your shop.'
+                    }, status=400)
+                elif order.status == 'rider_accepted':
+                    return JsonResponse({
+                        'success': False, 
+                        'message': '⚠️ A rider has accepted this order but has not picked up the laundry yet. Please wait for the rider to deliver the laundry to your shop.'
+                    }, status=400)
+                elif order.status == 'picked_up':
+                    return JsonResponse({
+                        'success': False, 
+                        'message': '⚠️ The rider has picked up the laundry from the customer but has not delivered it to your shop yet. Please wait for the rider to deliver the laundry.'
+                    }, status=400)
+                elif order.status == 'ready':
+                    return JsonResponse({
+                        'success': False, 
+                        'message': '✅ This order is already marked as ready for pickup. No further status update needed from you.'
+                    }, status=400)
+                elif order.status == 'out_for_delivery':
+                    return JsonResponse({
+                        'success': False, 
+                        'message': '🚚 This order is already out for delivery to the customer.'
+                    }, status=400)
+                elif order.status == 'delivered':
+                    return JsonResponse({
+                        'success': False, 
+                        'message': '✅ This order has already been delivered to the customer.'
+                    }, status=400)
+                else:
+                    return JsonResponse({
+                        'success': False, 
+                        'message': f'⚠️ Cannot update order status. Current status: "{order.get_status_display()}". Please wait for the rider to deliver the laundry to your shop.'
+                    }, status=400)
+            
+            # Check if the requested new status is allowed
+            if new_status not in allowed_shop_transitions[order.status]:
+                expected = allowed_shop_transitions[order.status]
+                expected_text = " → ".join(expected) if expected else "No further updates allowed"
+                return JsonResponse({
+                    'success': False,
+                    'message': f'⚠️ Invalid status transition. Current status: "{order.get_status_display()}". Next allowed status: {expected_text}'
+                }, status=400)
+            
             # Update the status
+            old_status = order.status
             order.status = new_status
             
             # Set ready_at timestamp when status becomes 'ready'
@@ -1428,35 +1484,72 @@ def update_order_status_api(request, order_id):
             
             order.save()
             
-            # Verify it was saved
-            order.refresh_from_db()
-            print(f"Status after save: {order.status}")
+            print(f"Status updated from {old_status} to {new_status}")
             
+            # Send notifications
             if new_status == 'washing':
-                notify_customer_about_shop_action(order, 'washing', order.shop.shop_name)
+                # Notify customer
+                create_notification(
+                    user=order.customer,
+                    notification_type='status_update',
+                    title='Washing Started 🧼',
+                    message=f'{order.shop.shop_name} has started washing your order #{order.order_number}.',
+                    order=order
+                )
+                return JsonResponse({
+                    'success': True,
+                    'message': f'🧼 Washing started! Customer notified.',
+                    'new_status': new_status
+                })
                 
             elif new_status == 'drying':
-                notify_customer_about_shop_action(order, 'drying', order.shop.shop_name)
+                # Notify customer
+                create_notification(
+                    user=order.customer,
+                    notification_type='status_update',
+                    title='Drying in Progress 💨',
+                    message=f'Your order #{order.order_number} is now in the drying cycle.',
+                    order=order
+                )
+                return JsonResponse({
+                    'success': True,
+                    'message': f'💨 Drying started! Customer notified.',
+                    'new_status': new_status
+                })
                 
             elif new_status == 'ready':
-                notify_customer_about_shop_action(order, 'ready', order.shop.shop_name)
+                # Notify customer
+                create_notification(
+                    user=order.customer,
+                    notification_type='status_update',
+                    title='Order Ready for Delivery! ✅',
+                    message=f'Your order #{order.order_number} is ready for delivery. A rider will be assigned soon.',
+                    order=order
+                )
                 
-                rider_notified = False
+                # Notify the assigned rider that order is ready for pickup
                 if order.rider:
-                    notify_assigned_rider_about_ready_order(order)
+                    create_notification(
+                        user=order.rider,
+                        notification_type='ready_for_delivery',
+                        title='Order Ready for Pickup! 🧺',
+                        message=f'Order #{order.order_number} from {order.shop.shop_name} is ready for pickup. Please head to the shop.',
+                        order=order
+                    )
                     rider_notified = True
+                else:
+                    rider_notified = False
                 
                 return JsonResponse({
                     'success': True,
-                    'message': f'Order marked as ready! {"Rider notified." if rider_notified else "No rider assigned yet."}',
-                    'rider_notified': rider_notified,
-                    'new_status': new_status
+                    'message': f'✅ Order marked as ready for pickup! {"Rider notified." if rider_notified else "No rider assigned yet."}',
+                    'new_status': new_status,
+                    'rider_notified': rider_notified
                 })
             
-            print(f"Successfully updated order {order.order_number} to {new_status}")
             return JsonResponse({
                 'success': True,
-                'message': f'Order status updated to {new_status}. Customer notified.',
+                'message': f'Status updated to {order.get_status_display()}.',
                 'new_status': new_status
             })
         else:
@@ -1471,7 +1564,6 @@ def update_order_status_api(request, order_id):
         import traceback
         traceback.print_exc()
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
-
 
 @login_required
 @csrf_exempt
@@ -1681,10 +1773,12 @@ def order_tracking_api(request, order_number):
             'pending': ('Order Placed', 'status-pending'),
             'accepted': ('Order Accepted by Shop', 'status-progress'),
             'rider_accepted': ('Rider Accepted', 'status-progress'),
-            'picked_up': ('Picked Up', 'status-progress'),
+            'picked_up': ('Picked Up from Customer', 'status-progress'),
+            'delivered_to_shop': ('Delivered to Shop', 'status-progress'),
             'washing': ('Being Washed', 'status-progress'),
             'drying': ('Drying', 'status-progress'),
             'ready': ('Ready for Delivery', 'status-progress'),
+            'picked_up_from_shop': ('Picked Up from Shop', 'status-progress'),
             'out_for_delivery': ('Out for Delivery', 'status-progress'),
             'delivered': ('Delivered', 'status-success'),
             'cancelled': ('Cancelled', 'status-cancelled'),
@@ -1693,41 +1787,32 @@ def order_tracking_api(request, order_number):
         
         status_display, status_class = status_display_map.get(order.status, (order.get_status_display(), 'status-progress'))
         
-        # Build timestamps for each stage
+        # Build timestamps
         timestamps = {
             'placed': order.created_at.strftime('%b %d, %Y %I:%M %p') if order.created_at else ''
         }
         
-        # Shop accepted timestamp
-        if order.status in ['accepted', 'rider_accepted', 'picked_up', 'washing', 'drying', 'ready', 'out_for_delivery', 'delivered']:
-            timestamps['shop_accepted'] = order.updated_at.strftime('%b %d, %Y %I:%M %p') if order.updated_at else ''
+        # Add timestamps for each stage if they exist
+        if order.updated_at:
+            timestamps['shop_accepted'] = order.updated_at.strftime('%b %d, %Y %I:%M %p')
+            timestamps['rider_accepted'] = order.updated_at.strftime('%b %d, %Y %I:%M %p')
         
-        # Rider accepted timestamp
-        if order.status in ['rider_accepted', 'picked_up', 'washing', 'drying', 'ready', 'out_for_delivery', 'delivered']:
-            timestamps['rider_accepted'] = order.updated_at.strftime('%b %d, %Y %I:%M %p') if order.updated_at else ''
+        if order.picked_up_at:
+            timestamps['picked_up'] = order.picked_up_at.strftime('%b %d, %Y %I:%M %p')
         
-        # Picked up timestamp
-        if order.status in ['picked_up', 'washing', 'drying', 'ready', 'out_for_delivery', 'delivered']:
-            timestamps['picked_up'] = order.updated_at.strftime('%b %d, %Y %I:%M %p') if order.updated_at else ''
+        if order.delivered_to_shop_at:
+            timestamps['delivered_to_shop'] = order.delivered_to_shop_at.strftime('%b %d, %Y %I:%M %p')
         
-        # Washing started timestamp
-        if order.status in ['washing', 'drying', 'ready', 'out_for_delivery', 'delivered']:
-            timestamps['washing'] = order.updated_at.strftime('%b %d, %Y %I:%M %p') if order.updated_at else ''
+        if order.ready_at:
+            timestamps['ready'] = order.ready_at.strftime('%b %d, %Y %I:%M %p')
         
-        # Drying started timestamp
-        if order.status in ['drying', 'ready', 'out_for_delivery', 'delivered']:
-            timestamps['drying'] = order.updated_at.strftime('%b %d, %Y %I:%M %p') if order.updated_at else ''
+        if order.picked_up_from_shop_at:
+            timestamps['picked_up_from_shop'] = order.picked_up_from_shop_at.strftime('%b %d, %Y %I:%M %p')
         
-        # Ready for delivery timestamp
-        if order.status in ['ready', 'out_for_delivery', 'delivered']:
-            timestamps['ready'] = order.updated_at.strftime('%b %d, %Y %I:%M %p') if order.updated_at else ''
+        if order.out_for_delivery_at:
+            timestamps['out_for_delivery'] = order.out_for_delivery_at.strftime('%b %d, %Y %I:%M %p')
         
-        # Out for delivery timestamp
-        if order.status in ['out_for_delivery', 'delivered']:
-            timestamps['out_for_delivery'] = order.updated_at.strftime('%b %d, %Y %I:%M %p') if order.updated_at else ''
-        
-        # Delivered timestamp
-        if order.status == 'delivered' and order.delivered_at:
+        if order.delivered_at:
             timestamps['delivered'] = order.delivered_at.strftime('%b %d, %Y %I:%M %p')
         
         data = {
@@ -1752,8 +1837,9 @@ def order_tracking_api(request, order_number):
         return JsonResponse({'error': 'Order not found'}, status=404)
     except Exception as e:
         print(f"Error in order_tracking_api: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'error': str(e)}, status=500)
-
 
 # ========== RIDER APIs ==========
 
@@ -1829,7 +1915,7 @@ def get_rider_notifications_api(request):
 @login_required
 @csrf_exempt
 def rider_update_order_status_api(request, order_number):
-    """Rider updates delivery status (picked_up, out_for_delivery, delivered)"""
+    """Rider updates delivery status - Full workflow"""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=400)
     
@@ -1864,7 +1950,9 @@ def rider_update_order_status_api(request, order_number):
             'drying': 'Drying',
             'ready': 'Ready for Pickup',
             'rider_accepted': 'Accepted by Rider',
-            'picked_up': 'Picked Up',
+            'picked_up': 'Picked Up from Customer',
+            'delivered_to_shop': 'Delivered to Shop',
+            'picked_up_from_shop': 'Picked Up Clean from Shop',
             'out_for_delivery': 'Out for Delivery',
             'delivered': 'Delivered',
             'rejected': 'Rejected'
@@ -1873,33 +1961,34 @@ def rider_update_order_status_api(request, order_number):
         current_status_display = status_display_map.get(order.status, order.status)
         new_status_display = status_display_map.get(new_status, new_status)
         
-        # ========== ALLOWED TRANSITIONS ==========
+        # ========== CORRECTED ALLOWED TRANSITIONS ==========
         allowed_transitions = {
-            'ready': ['out_for_delivery'],        # Ready can go directly to out_for_delivery
-            'rider_accepted': ['picked_up'],
-            'picked_up': ['out_for_delivery'],
-            'out_for_delivery': ['delivered'],
+            'rider_accepted': ['picked_up'],                    # Pick up dirty from customer
+            'picked_up': ['delivered_to_shop'],                 # Deliver dirty to shop
+            'delivered_to_shop': [],                            # Shop handles washing/drying/ready (no rider action)
+            'ready': ['picked_up_from_shop'],                   # Pick up clean from shop
+            'picked_up_from_shop': ['out_for_delivery'],        # Deliver clean to customer
+            'out_for_delivery': ['delivered'],                  # Complete delivery
         }
-        
-        # ========== VALIDATION: Check if shop has completed processing ==========
-        if new_status == 'out_for_delivery':
-            # Check if the shop has ever marked the order as 'ready'
-            # The ready_at timestamp is set when shop owner marks order as 'ready'
-            if not order.ready_at:
-                # If ready_at is not set, check if order status is 'ready'
-                # If order status is 'ready', that means shop has completed processing
-                if order.status != 'ready':
-                    return JsonResponse({
-                        'success': False,
-                        'message': '❌ Cannot mark as "Out for Delivery". The shop has not finished processing your laundry yet (Washing → Drying → Ready for Delivery). Please wait for the shop to complete the process.'
-                    }, status=400)
         
         # ========== CHECK IF STATUS TRANSITION IS ALLOWED ==========
         if order.status not in allowed_transitions:
-            return JsonResponse({
-                'success': False,
-                'message': f'⚠️ Cannot update delivery status. Order is currently "{current_status_display}". Expected status: ready, rider_accepted, picked_up, or out_for_delivery.'
-            }, status=400)
+            # Check if the order is 'accepted' (shop accepted, waiting for rider)
+            if order.status == 'accepted':
+                return JsonResponse({
+                    'success': False,
+                    'message': f'⚠️ Please use the "Accept Task" button to accept this order first. Current status: "{current_status_display}"'
+                }, status=400)
+            elif order.status in ['washing', 'drying']:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'🧼 The shop is currently processing your laundry ({current_status_display}). Please wait for the shop to mark it as "Ready for Delivery".'
+                }, status=400)
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'⚠️ Cannot update delivery status. Order is currently "{current_status_display}".'
+                }, status=400)
         
         # Check if the transition is allowed
         if new_status not in allowed_transitions[order.status]:
@@ -1915,12 +2004,16 @@ def rider_update_order_status_api(request, order_number):
         order.status = new_status
         
         # Set timestamps
-        if new_status == 'delivered':
-            order.delivered_at = timezone.now()
-        elif new_status == 'picked_up':
+        if new_status == 'picked_up':
             order.picked_up_at = timezone.now()
+        elif new_status == 'delivered_to_shop':
+            order.delivered_to_shop_at = timezone.now()
+        elif new_status == 'picked_up_from_shop':
+            order.picked_up_from_shop_at = timezone.now()
         elif new_status == 'out_for_delivery':
             order.out_for_delivery_at = timezone.now()
+        elif new_status == 'delivered':
+            order.delivered_at = timezone.now()
         
         order.save()
         
@@ -1935,8 +2028,52 @@ def rider_update_order_status_api(request, order_number):
             notify_shop_about_rider_action(order, 'picked_up', rider_name, rider_phone)
             return JsonResponse({
                 'success': True,
-                'message': f'✅ Order marked as Picked Up! The customer has been notified.',
-                'new_status': new_status
+                'message': f'✅ Order marked as Picked Up from Customer! Please deliver the dirty laundry to {order.shop.shop_name}.',
+                'new_status': new_status,
+                'order_id': order.id,
+                'order_number': order.order_number
+            })
+            
+        elif new_status == 'delivered_to_shop':
+            # Notify shop that dirty laundry has arrived
+            create_notification(
+                user=order.shop.owner,
+                notification_type='order_delivered',
+                title='Dirty Laundry Delivered! 📦',
+                message=f'Rider {rider_name} has delivered the dirty laundry for order #{order.order_number}. Ready for processing.',
+                order=order
+            )
+            # Notify customer
+            create_notification(
+                user=order.customer,
+                notification_type='status_update',
+                title='Laundry Delivered to Shop 🏪',
+                message=f'Your laundry for order #{order.order_number} has been delivered to {order.shop.shop_name}. They will now process your order.',
+                order=order
+            )
+            return JsonResponse({
+                'success': True,
+                'message': f'✅ Dirty laundry delivered to {order.shop.shop_name}! The shop will now process your order.',
+                'new_status': new_status,
+                'order_id': order.id,
+                'order_number': order.order_number
+            })
+            
+        elif new_status == 'picked_up_from_shop':
+            notify_customer_about_rider_action(order, 'picked_up', rider_name, rider_phone)
+            create_notification(
+                user=order.shop.owner,
+                notification_type='order_picked_up',
+                title='Clean Laundry Picked Up 🧺',
+                message=f'Rider {rider_name} has picked up the clean laundry for order #{order.order_number}.',
+                order=order
+            )
+            return JsonResponse({
+                'success': True,
+                'message': f'✅ Clean laundry picked up from {order.shop.shop_name}! Now delivering to customer.',
+                'new_status': new_status,
+                'order_id': order.id,
+                'order_number': order.order_number
             })
             
         elif new_status == 'out_for_delivery':
@@ -1944,7 +2081,9 @@ def rider_update_order_status_api(request, order_number):
             return JsonResponse({
                 'success': True,
                 'message': f'🚚 Order marked as Out for Delivery! The customer has been notified.',
-                'new_status': new_status
+                'new_status': new_status,
+                'order_id': order.id,
+                'order_number': order.order_number
             })
             
         elif new_status == 'delivered':
@@ -1953,13 +2092,17 @@ def rider_update_order_status_api(request, order_number):
             return JsonResponse({
                 'success': True,
                 'message': f'✅ Order marked as Delivered! Thank you for your service.',
-                'new_status': new_status
+                'new_status': new_status,
+                'order_id': order.id,
+                'order_number': order.order_number
             })
         
         return JsonResponse({
             'success': True,
-            'message': f'Status updated to "{new_status_display}". Customer notified.',
-            'new_status': new_status
+            'message': f'Status updated to "{new_status_display}".',
+            'new_status': new_status,
+            'order_id': order.id,
+            'order_number': order.order_number
         })
         
     except Order.DoesNotExist:
@@ -1969,7 +2112,7 @@ def rider_update_order_status_api(request, order_number):
         import traceback
         traceback.print_exc()
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
-
+    
 @login_required
 def get_order_details_api(request, order_number):
     """API endpoint to get detailed order information for rider dashboard view button"""
@@ -2000,6 +2143,7 @@ def get_order_details_api(request, order_number):
             'pickup_time': order.pickup_time.strftime('%I:%M %p') if order.pickup_time else '',
             'weight': float(order.weight),
             'total_amount': f'{order.total_amount:.2f}',
+            'status': order.status,  # ← ADD THIS LINE
             'status_display': order.get_status_display(),
             'special_instructions': order.special_instructions or '',
         }
@@ -2032,7 +2176,8 @@ def get_order_details_by_id_api(request, order_id):
                 'pickup_time': order.pickup_time.strftime('%I:%M %p') if order.pickup_time else '',
                 'weight': float(order.weight),
                 'total_amount': f'{order.total_amount:.2f}',
-                'status_display': order.get_status_display(),
+                'status': order.status,  # ← ADD THIS LINE - THIS WAS MISSING!
+                'status_display': order.get_status_display(),  # ← ADD THIS LINE
                 'special_instructions': order.special_instructions or '',
             }
             return JsonResponse({'success': True, 'order': order_data})

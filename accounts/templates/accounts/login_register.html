@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LabHatud | Login &amp; Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>LabHatud | Secure Login &amp; Register</title>
     {% load static %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -256,6 +256,14 @@
         }
 
         .shake { animation: shake 0.3s ease-in-out; }
+
+        /* additional integer-only hint */
+        .phone-hint {
+            display: block;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.4);
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body style="background: var(--surface); height: 100%;">
@@ -433,7 +441,7 @@
                 <h2 class="form-heading">Create account</h2>
                 <p class="form-sub">Join the LabHatud ecosystem today.</p>
 
-                <form method="POST" action="{% url 'register' %}" id="registerForm">
+                <form method="POST" action="{% url 'register' %}" id="registerForm" novalidate>
                     {% csrf_token %}
 
                     <div class="input-group">
@@ -496,9 +504,16 @@
                         </div>
                     </div>
 
-                    <div class="input-group">
+                    <!-- PHONE NUMBER WITH INTEGER-ONLY ENFORCEMENT -->
+                    <div class="input-group" id="phoneGroup">
                         <label>Phone Number *</label>
-                        <input type="tel" name="reg_phone" placeholder="+63 912 345 6789" required>
+                        <input type="tel" name="reg_phone" id="phoneNumberInput" 
+                               placeholder="09123456789" 
+                               inputmode="numeric" 
+                               pattern="[0-9]+" 
+                               autocomplete="off"
+                               required>
+                        <small class="phone-hint">📞 Numbers only — digits 0-9, no spaces or symbols</small>
                     </div>
 
                     <!-- ROLE SELECTOR -->
@@ -700,10 +715,60 @@
             else                           { input.type = 'password'; span.textContent = '👁'; }
         }
 
-        // ── FORM VALIDATION ──
+        // --------------------------------------------------------------
+        // PHONE NUMBER: INTEGER-ONLY enforcement (no letters, no symbols)
+        // --------------------------------------------------------------
+        const phoneInput = document.getElementById('phoneNumberInput');
+        if (phoneInput) {
+            // 1. Block any key that would produce non-digit character (including letters, punctuation, space)
+            phoneInput.addEventListener('keypress', function(event) {
+                const charCode = event.which ? event.which : event.keyCode;
+                const char = String.fromCharCode(charCode);
+                // allow only digits (0-9)
+                if (!/[0-9]/.test(char)) {
+                    event.preventDefault();
+                    showToast('Only numbers 0-9 are allowed in phone field', 'warning');
+                    return false;
+                }
+            });
+
+            // 2. Additional safeguard: on input, remove any non-digit characters (paste protection)
+            phoneInput.addEventListener('input', function(e) {
+                let rawValue = this.value;
+                let sanitized = rawValue.replace(/\D/g, '');  // removes everything except digits
+                if (sanitized !== rawValue) {
+                    this.value = sanitized;
+                    showToast('Phone number accepts digits only (letters/symbols removed)', 'info');
+                }
+            });
+
+            // 3. Blur validation: if contains anything else, clean and show error (double safety)
+            phoneInput.addEventListener('blur', function() {
+                let current = this.value;
+                let onlyDigits = current.replace(/\D/g, '');
+                if (current !== onlyDigits) {
+                    this.value = onlyDigits;
+                    if (onlyDigits.length === 0) {
+                        showToast('Phone number cannot be empty and must contain digits only', 'error');
+                        this.classList.add('shake');
+                        setTimeout(() => this.classList.remove('shake'), 300);
+                    } else {
+                        showToast('Invalid characters removed. Phone number updated to digits only.', 'warning');
+                    }
+                }
+                if (this.value.length > 0 && this.value.length < 7) {
+                    // optional soft hint but not blocking submit
+                    const warnMsg = 'Phone number seems short — please enter a valid number (digits only)';
+                    showToast(warnMsg, 'info');
+                }
+            });
+        }
+
+        // ── FORM VALIDATION (extend to double-check phone) ──
         const registerForm = document.getElementById('registerForm');
         if (registerForm) {
             registerForm.addEventListener('submit', function(e) {
+                // password match & length
                 const password = document.querySelector('input[name="reg_password"]').value;
                 const confirm  = document.querySelector('input[name="reg_confirm"]').value;
                 if (password !== confirm) {
@@ -716,6 +781,31 @@
                     showToast('Password must be at least 8 characters!', 'error');
                     return false;
                 }
+
+                // Phone integer validation final check
+                const phoneField = document.getElementById('phoneNumberInput');
+                let rawPhone = phoneField.value;
+                let digitsOnly = rawPhone.replace(/\D/g, '');
+                if (digitsOnly.length === 0) {
+                    e.preventDefault();
+                    showToast('Phone number is required and must contain digits only (0-9).', 'error');
+                    phoneField.focus();
+                    phoneField.classList.add('shake');
+                    setTimeout(() => phoneField.classList.remove('shake'), 400);
+                    return false;
+                }
+                // ensure field value is exactly digits
+                if (rawPhone !== digitsOnly) {
+                    phoneField.value = digitsOnly;
+                }
+                // optional: length sanity check (at least 7 digits for PH mobile)
+                if (digitsOnly.length < 7) {
+                    e.preventDefault();
+                    showToast('Please enter a valid phone number with at least 7 digits (numbers only).', 'error');
+                    phoneField.focus();
+                    return false;
+                }
+                return true;
             });
         }
 

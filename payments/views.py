@@ -229,7 +229,16 @@ def gcash_checkout_view(request):
             messages.error(request, f"GCash payment error: {str(e)}")
             return redirect("checkout")
     
-    return render(request, "payments/gcash_checkout.html")
+    # Get amount from session if available
+    gcash_data = request.session.get('gcash_payment_data', {})
+    amount = gcash_data.get('amount', '100.00')
+    description = gcash_data.get('description', 'LabHatud Laundry Order')
+    
+    context = {
+        'amount': amount,
+        'description': description
+    }
+    return render(request, "payments/gcash_checkout.html", context)
 
 
 def gcash_callback_view(request):
