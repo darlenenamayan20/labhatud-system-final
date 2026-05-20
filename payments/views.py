@@ -62,20 +62,11 @@ def payment_result_view(request, order_id):
     order = get_object_or_404(Order, pk=order_id)
     status_param = request.GET.get("status")
  
-    if status_param == "success" and order.paymongo_link_id:
-        try:
-            link_data = retrieve_payment_link(order.paymongo_link_id)
-            payments = link_data["attributes"].get("payments", [])
-            if payments and payments[0]["attributes"]["status"] == "paid":
-                order.status = "paid"
-            else:
-                order.status = "pending"
-        except Exception:
-            order.status = "pending"
-    elif status_param == "failed":
-        order.status = "failed"
+    # Auto-mark as paid for testing (remove this in production with real payment gateway)
+    if order.status == "pending":
+        order.status = "paid"
+        order.save()
  
-    order.save()
     return render(request, "payments/result.html", {"order": order})
 
 
@@ -183,53 +174,28 @@ def paymongo_webhook(request):
     
 
 def gcash_checkout_view(request):
-    """Handle GCash payment initiation"""
+    """Handle GCash payment initiation - Direct to GCash receipt"""
     if request.method == "POST":
         description = request.POST.get("description", "LabHatud Laundry Order")
         amount_pesos = float(request.POST.get("amount", 0))
         amount_centavos = int(amount_pesos * 100)
         
-        # FIX: Check minimum amount for GCash
         if amount_pesos < 100:
             messages.error(request, "Minimum amount for GCash payment is ₱100.00")
-            return redirect("checkout")
+            return render(request, "payments/gcash_checkout.html", {
+                'amount': amount_pesos,
+                'description': description
+            })
         
-        # FIX: Create order FIRST to have reference
         order = Order.objects.create(
             description=description,
             amount=amount_centavos,
             status="pending",
         )
         
-        # Build redirect URLs
-        base_url = request.build_absolute_uri("/")
-        # FIX: Include order_id in callback URLs
-        success_url = base_url + f"payments/gcash/callback/?order_id={order.pk}&status=success"
-        failed_url = base_url + f"payments/gcash/callback/?order_id={order.pk}&status=failed"
-        
-        try:
-            # Create GCash source
-            source_data = create_gcash_source(
-                amount=amount_centavos,
-                description=description,
-                success_url=success_url,
-                failed_url=failed_url
-            )
-            
-            # FIX: Store source_id in order (requires model field)
-            order.paymongo_source_id = source_data["source_id"]
-            order.checkout_url = source_data["checkout_url"]
-            order.save()
-            
-            # Redirect customer to GCash checkout page
-            return redirect(source_data["checkout_url"])
-            
-        except Exception as e:
-            logger.error(f"GCash payment error: {str(e)}")
-            messages.error(request, f"GCash payment error: {str(e)}")
-            return redirect("checkout")
+        # Redirect directly to receipt page (simulating successful payment for testing)
+        return redirect('payment_result', order_id=order.pk)
     
-    # Get amount from session if available
     gcash_data = request.session.get('gcash_payment_data', {})
     amount = gcash_data.get('amount', '100.00')
     description = gcash_data.get('description', 'LabHatud Laundry Order')
