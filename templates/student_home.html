@@ -2001,49 +2001,64 @@ function displayTrackingData(order) {
         // Remove the parameter from URL without refreshing
         window.history.replaceState({}, document.title, window.location.pathname);
         
-        // Call the API to get pending booking data from session
-        fetch('/api/get-pending-booking/')
-            .then(response => response.json())
-            .then(data => {
-                console.log('API response:', data);
-                if (data.has_pending_booking && data.booking_data) {
-                    // Restore and open the booking modal
-                    restoreBookingModal(data.booking_data);
-                    showToast('Payment Successful! 🎉', 'Your payment was completed. Please confirm your booking.', 'success');
-                } else {
-                    // Try sessionStorage as fallback
-                    let pendingBooking = sessionStorage.getItem('pending_booking');
-                    if (pendingBooking) {
-                        try {
-                            const bookingData = JSON.parse(pendingBooking);
-                            restoreBookingModal(bookingData);
-                            showToast('Payment Successful! 🎉', 'Your payment was completed. Please confirm your booking.', 'success');
-                        } catch(e) {
-                            showToast('Payment Successful! 🎉', 'Your payment was completed.', 'success');
-                            setTimeout(() => location.reload(), 2000);
-                        }
-                    } else {
-                        showToast('Payment Successful! 🎉', 'Your payment was completed.', 'success');
+        // Automatically create the booking after successful payment
+        const pendingBooking = sessionStorage.getItem('pending_booking');
+        
+        if (pendingBooking) {
+            try {
+                const bookingData = JSON.parse(pendingBooking);
+                
+                // Show loading toast
+                showToast('Processing...', 'Creating your booking...', 'info');
+                
+                // Create the booking automatically
+                const payload = {
+                    shop_id: bookingData.shop_id,
+                    service_type: bookingData.service_type,
+                    weight: bookingData.weight,
+                    payment_method: bookingData.payment_method,
+                    pickup_date: bookingData.pickup_date,
+                    pickup_time: bookingData.pickup_time,
+                    pickup_address: bookingData.pickup_address,
+                    instructions: bookingData.instructions || '',
+                    total_amount: bookingData.total_amount
+                };
+                
+                fetch('/api/booking/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        // Clear storage
+                        sessionStorage.removeItem('pending_booking');
+                        sessionStorage.removeItem('payment_success');
+                        
+                        showToast('Booking Confirmed! 🎉', `Order #${result.order_number} created successfully. Waiting for shop approval.`, 'success');
                         setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showToast('Booking Failed', result.message || 'Please try again.', 'danger');
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching pending booking:', error);
-                // Try sessionStorage as fallback
-                let pendingBooking = sessionStorage.getItem('pending_booking');
-                if (pendingBooking) {
-                    try {
-                        const bookingData = JSON.parse(pendingBooking);
-                        restoreBookingModal(bookingData);
-                        showToast('Payment Successful! 🎉', 'Your payment was completed. Please confirm your booking.', 'success');
-                    } catch(e) {
-                        showToast('Payment Successful!', 'Please create a new booking to complete your order.', 'success');
-                    }
-                } else {
-                    showToast('Payment Successful!', 'Please create a new booking to complete your order.', 'success');
-                }
-            });
+                })
+                .catch(error => {
+                    console.error('Booking error:', error);
+                    showToast('Error', 'Failed to create booking. Please try again.', 'danger');
+                });
+                
+            } catch(e) {
+                console.error('Error parsing booking data:', e);
+                showToast('Payment Successful!', 'Your payment was completed.', 'success');
+                setTimeout(() => location.reload(), 2000);
+            }
+        } else {
+            showToast('Payment Successful!', 'Your payment was completed.', 'success');
+            setTimeout(() => location.reload(), 2000);
+        }
     }
     
     // ========== SHOP CARD CLICK HANDLERS ==========
